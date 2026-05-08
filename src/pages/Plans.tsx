@@ -1,0 +1,379 @@
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Plus, X, Pencil, Trash2, ChevronDown, ChevronUp, Calendar, CheckCircle2 } from 'lucide-react';
+import { useFirestore } from '../contexts/FirestoreContext';
+import { Plan, PlanStatus } from '../types';
+import { parseISO, differenceInDays, format } from 'date-fns';
+import Toast, { ToastState } from '../components/Toast';
+import ConfirmDialog from '../components/ConfirmDialog';
+
+// Firestore returns serverTimestamp fields as Timestamp objects, not strings.
+// This helper converts either format to a JS Date safely.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toDate(val: any): Date {
+    if (!val) return new Date();
+    if (val instanceof Date) return val;
+    if (typeof val === 'string') return parseISO(val);
+    if (typeof val.toDate === 'function') return val.toDate(); // Firestore Timestamp
+    return new Date(val);
+}
+
+// ── Status calc ────────────────────────────────────────────────
+function calculatePlanStatus(plan: Plan): PlanStatus {
+    if (plan.completedCount >= plan.targetCount) return 'completed';
+
+    const now = new Date();
+    const created = toDate(plan.createdAt);
+    const target = toDate(plan.targetDate);
+
+    if (target < now) return 'failed';
+
+    const totalDays = differenceInDays(target, created) || 1;
+    const daysPassed = differenceInDays(now, created);
+    const expected = (daysPassed / totalDays) * plan.targetCount;
+
+    if (plan.completedCount >= expected) return 'on_track';
+    if (plan.completedCount >= expected * 0.7) return 'at_risk';
+    return 'overdue';
+}
+
+const statusConfig: Record<PlanStatus, { label: string; color: string; bg: string }> = {
+    on_track: { label: 'On Track', color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+    at_risk: { label: 'At Risk', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+    completed: { label: 'Completed', color: '#6366f1', bg: 'rgba(99,102,241,0.15)' },
+    overdue: { label: 'Overdue', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+    failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+};
+
+// ── Circular progress ──────────────────────────────────────────
+function CircularProgress({ percentage, color, size = 64 }: { percentage: number; color: string; size?: number }) {
+    const r = (size - 10) / 2;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (Math.min(percentage, 100) / 100) * circ;
+
+    return (
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={6} />
+            <circle
+                cx={size / 2} cy={size / 2} r={r} fill="none"
+                stroke={color} strokeWidth={6} strokeLinecap="round"
+                strokeDasharray={circ} strokeDashoffset={offset}
+                style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+            />
+            <text
+                x="50%" y="50%" dominantBaseline="middle" textAnchor="middle"
+                fill="white" fontSize={size * 0.22} fontWeight="700"
+                style={{ transform: `rotate(90deg) translate(0, -${size}px)`, transformOrigin: 'center' }}
+            >
+                {Math.round(percentage)}%
+            </text>
+        </svg>
+    );
+}
+
+// ── Templates ──────────────────────────────────────────────────
+const templates = [
+    { label: 'Weekly Goal', days: 7, count: 7 },
+    { label: 'Monthly Goal', days: 30, count: 20 },
+    { label: '30-Day Challenge', days: 30, count: 30 },
+];
+
+const emptyForm = { title: '', description: '', targetDate: '', targetCount: 10 };
+
+export default function Plans() {
+    const { plans, tasks, addPlan, updatePlan, deletePlan } = useFirestore();
+    const [showForm, setShowForm] = useState(false);
+    const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [formData, setFormData] = useState(emptyForm);
+    const [submitting, setSubmitting] = useState(false);
+    const [toast, setToast] = useState<ToastState | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
+    const [isClosing, setIsClosing] = useState(false);
+
+    const closeToast = useCallback(() => setToast(null), []);
+
+    // Auto-sync completedCount from linked tasks
+    useEffect(() => {
+        plans.forEach(plan => {
+            const linked = tasks.filter(t => t.planId === plan.id && t.status === 'completed').length;
+            if (linked !== plan.completedCount) {
+                updatePlan(plan.id, { completedCount: linked });
+            }
+        });
+    }, [tasks, plans, updatePlan]);
+
+    const plansWithStatus = useMemo(() =>
+        plans.map(p => ({ ...p, calculatedStatus: calculatePlanStatus(p) })),
+        [plans]
+    );
+
+    const overallStats = useMemo(() => {
+        const on_track = plansWithStatus.filter(p => p.calculatedStatus === 'on_track').length;
+        const at_risk = plansWithStatus.filter(p => p.calculatedStatus === 'at_risk').length;
+        const completed = plansWithStatus.filter(p => p.calculatedStatus === 'completed').length;
+        const overdue = plansWithStatus.filter(p => ['overdue', 'failed'].includes(p.calculatedStatus)).length;
+        return { on_track, at_risk, completed, overdue };
+    }, [plansWithStatus]);
+
+    const linkedTasks = useMemo(() =>
+        selectedPlan ? tasks.filter(t => t.planId === selectedPlan) : [],
+        [selectedPlan, tasks]
+    );
+
+    const resetForm = () => { setFormData(emptyForm); setEditingPlan(null); };
+    const closeForm = () => {
+        setIsClosing(true);
+        setTimeout(() => {
+            setShowForm(false);
+            setIsClosing(false);
+            resetForm();
+        }, 200);
+    };
+
+    const handleEdit = (plan: Plan) => {
+        setEditingPlan(plan);
+        setFormData({ title: plan.title, description: plan.description, targetDate: plan.targetDate, targetCount: plan.targetCount });
+        setShowForm(true);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formData.title.trim() || !formData.targetDate) return;
+
+        setSubmitting(true);
+        setToast({ type: 'loading', message: editingPlan ? 'Saving changes…' : 'Creating plan…' });
+
+        try {
+            if (editingPlan) {
+                await updatePlan(editingPlan.id, formData);
+            } else {
+                await addPlan({ ...formData, linkedTaskIds: [], status: 'on_track', userId: '' });
+            }
+            closeForm();
+            setToast({ type: 'success', message: editingPlan ? 'Plan updated!' : 'Plan created successfully!' });
+        } catch {
+            setToast({ type: 'error', message: 'Something went wrong. Please try again.' });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const applyTemplate = (t: typeof templates[number]) => {
+        const d = new Date();
+        d.setDate(d.getDate() + t.days);
+        setFormData(f => ({ ...f, title: t.label, targetDate: d.toISOString().slice(0, 10), targetCount: t.count }));
+        setShowForm(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!confirmDelete) return;
+        try {
+            await deletePlan(confirmDelete.id);
+            setToast({ type: 'success', message: 'Plan deleted.' });
+        } catch {
+            setToast({ type: 'error', message: 'Failed to delete plan.' });
+        } finally {
+            setConfirmDelete(null);
+        }
+    };
+
+    return (
+        <div>
+            {/* Toast */}
+            {toast && <Toast {...toast} onClose={closeToast} />}
+
+            {/* Confirm Delete Dialog */}
+            {confirmDelete && (
+                <ConfirmDialog
+                    title="Delete Plan?"
+                    message={`"${confirmDelete.title}" and all its progress will be permanently removed.`}
+                    onConfirm={handleDeleteConfirm}
+                    onCancel={() => setConfirmDelete(null)}
+                />
+            )}
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">Plans</h1>
+                    <p className="text-slate-400 text-sm mt-1">{plans.length} total goals</p>
+                </div>
+                <button
+                    onClick={() => { resetForm(); setShowForm(true); }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 shrink-0"
+                >
+                    <Plus className="w-4 h-4" />
+                    New Plan
+                </button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                {[
+                    { label: 'On Track', value: overallStats.on_track, color: '#10b981' },
+                    { label: 'At Risk', value: overallStats.at_risk, color: '#f59e0b' },
+                    { label: 'Completed', value: overallStats.completed, color: '#6366f1' },
+                    { label: 'Overdue', value: overallStats.overdue, color: '#ef4444' },
+                ].map(s => (
+                    <div key={s.label} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-center">
+                        <p className="text-2xl font-bold text-white">{s.value}</p>
+                        <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                        <div className="mt-2 h-0.5 rounded-full mx-auto w-12" style={{ backgroundColor: s.color }} />
+                    </div>
+                ))}
+            </div>
+
+            {/* Quick templates */}
+            <div className="mb-6">
+                <p className="text-xs text-slate-400 font-medium mb-2 uppercase tracking-wider">Quick Templates</p>
+                <div className="flex flex-wrap gap-2">
+                    {templates.map(t => (
+                        <button
+                            key={t.label}
+                            onClick={() => applyTemplate(t)}
+                            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm hover:bg-violet-500/20 hover:border-violet-500/40 hover:text-white transition-all"
+                        >
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Plans list */}
+            {plansWithStatus.length === 0 ? (
+                <div className="text-center py-20 text-slate-400">
+                    <p className="text-lg font-medium text-white mb-2">No plans yet</p>
+                    <p className="text-sm">Create your first goal to track your progress.</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {plansWithStatus.map(plan => {
+                        const pct = plan.targetCount > 0 ? (plan.completedCount / plan.targetCount) * 100 : 0;
+                        const cfg = statusConfig[plan.calculatedStatus];
+                        const daysLeft = differenceInDays(toDate(plan.targetDate), new Date());
+                        const isExpanded = selectedPlan === plan.id;
+
+                        return (
+                            <div key={plan.id} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden hover:border-white/20 transition-all">
+                                {/* Status bar */}
+                                <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${cfg.color} ${Math.min(pct, 100)}%, rgba(255,255,255,0.06) 0%)` }} />
+
+                                <div className="p-5">
+                                    <div className="flex items-start gap-4">
+                                        {/* Circular progress */}
+                                        <div className="shrink-0">
+                                            <CircularProgress percentage={pct} color={cfg.color} size={64} />
+                                        </div>
+
+                                        {/* Info */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                <h3 className="text-white font-semibold truncate">{plan.title}</h3>
+                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                                            </div>
+                                            {plan.description && <p className="text-xs text-slate-400 mb-2 truncate">{plan.description}</p>}
+                                            <div className="flex flex-wrap gap-3 text-xs text-slate-400">
+                                                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{format(toDate(plan.targetDate), 'MMM d, yyyy')}</span>
+                                                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{plan.completedCount} / {plan.targetCount}</span>
+                                                <span style={{ color: daysLeft < 0 ? '#ef4444' : daysLeft < 3 ? '#f59e0b' : '#94a3b8' }}>
+                                                    {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : `${daysLeft}d left`}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-1 shrink-0">
+                                            <button onClick={() => setSelectedPlan(isExpanded ? null : plan.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                                                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                            </button>
+                                            <button onClick={() => handleEdit(plan)} className="p-1.5 rounded-lg text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 transition-all">
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => setConfirmDelete({ id: plan.id, title: plan.title })} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Linked tasks */}
+                                    {isExpanded && (
+                                        <div className="mt-4 pt-4 border-t border-white/10 animate-slide-in">
+                                            <p className="text-xs text-slate-400 font-medium mb-2">Linked Tasks ({linkedTasks.length})</p>
+                                            {linkedTasks.length === 0 ? (
+                                                <p className="text-xs text-slate-500">No tasks linked to this plan yet.</p>
+                                            ) : (
+                                                <div className="space-y-1.5">
+                                                    {linkedTasks.map(t => (
+                                                        <div key={t.id} className="flex items-center gap-2 text-xs">
+                                                            <CheckCircle2 className={`w-3.5 h-3.5 ${t.status === 'completed' ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                                            <span className={t.status === 'completed' ? 'line-through text-slate-500' : 'text-slate-300'}>{t.title}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Form modal */}
+            {showForm && (
+                <div
+                    className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+                    onClick={e => e.target === e.currentTarget && closeForm()}
+                >
+                    <div className={`w-full max-w-lg rounded-3xl bg-slate-900 border border-white/10 shadow-2xl ${isClosing ? 'animate-scale-out' : 'animate-scale-in'}`}>
+                        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
+                            <h2 className="text-lg font-semibold text-white">{editingPlan ? 'Edit Plan' : 'New Plan'}</h2>
+                            <button onClick={closeForm} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Title *</label>
+                                <input className="input" placeholder="e.g. Complete 30 workouts" value={formData.title} onChange={e => setFormData(f => ({ ...f, title: e.target.value }))} required autoFocus />
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Description</label>
+                                <textarea className="input resize-none" rows={2} placeholder="Optional details…" value={formData.description} onChange={e => setFormData(f => ({ ...f, description: e.target.value }))} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Date *</label>
+                                    <input type="date" className="input" value={formData.targetDate} onChange={e => setFormData(f => ({ ...f, targetDate: e.target.value }))} required />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Count</label>
+                                    <input type="number" min={1} className="input" value={formData.targetCount} onChange={e => setFormData(f => ({ ...f, targetCount: Number(e.target.value) }))} />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={closeForm} className="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-sm font-medium">Cancel</button>
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium text-sm hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
+                                >
+                                    {submitting && (
+                                        <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                        </svg>
+                                    )}
+                                    {submitting ? 'Saving…' : editingPlan ? 'Save Changes' : 'Create Plan'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
