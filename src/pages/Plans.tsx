@@ -5,6 +5,7 @@ import { Plan, PlanStatus } from '../types';
 import { parseISO, differenceInDays, format } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
+import AIPlanAssistant from '../components/AIPlanAssistant';
 
 // Firestore returns serverTimestamp fields as Timestamp objects, not strings.
 // This helper converts either format to a JS Date safely.
@@ -130,6 +131,16 @@ export default function Plans() {
         }, 200);
     };
 
+    const handleAIApply = (data: { title: string; targetDate: string; targetCount: number; suggestedFrequency: string }) => {
+        setFormData({
+            title: data.title,
+            description: '',
+            targetDate: data.targetDate,
+            targetCount: data.targetCount,
+        });
+        setShowForm(true);
+    };
+
     const handleEdit = (plan: Plan) => {
         setEditingPlan(plan);
         setFormData({ title: plan.title, description: plan.description, targetDate: plan.targetDate, targetCount: plan.targetCount });
@@ -198,13 +209,16 @@ export default function Plans() {
                     <h1 className="text-2xl md:text-3xl font-bold text-white">Plans</h1>
                     <p className="text-slate-400 text-sm mt-1">{plans.length} total goals</p>
                 </div>
-                <button
-                    onClick={() => { resetForm(); setShowForm(true); }}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 shrink-0"
-                >
-                    <Plus className="w-4 h-4" />
-                    New Plan
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                    <AIPlanAssistant onApply={handleAIApply} />
+                    <button
+                        onClick={() => { resetForm(); setShowForm(true); }}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-violet-500/30"
+                    >
+                        <Plus className="w-4 h-4" />
+                        New Plan
+                    </button>
+                </div>
             </div>
 
             {/* Stats */}

@@ -8,9 +8,16 @@
     ],
     "rewrites": [
       {
+        "source": "/api/generatePlanRecommendation",
+        "function": "generatePlanRecommendation"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
     ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }
