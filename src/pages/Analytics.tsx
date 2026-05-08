@@ -83,8 +83,9 @@ export default function Analytics() {
             const weekEnd = endOfWeek(weekStart);
             const weekTasks = tasks.filter(t => t.dueDate && isWithinInterval(parseISO(t.dueDate), { start: weekStart, end: weekEnd }));
             return {
-                week: format(weekStart, 'MMM d'),
+                week: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
                 completed: weekTasks.filter(t => t.status === 'completed').length,
+                total: weekTasks.length,
             };
         });
     }, [tasks, dateRange]);
@@ -168,10 +169,12 @@ export default function Analytics() {
                         {viewType === 'week' ? (
                             <LineChart data={weeklyData} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                                <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} interval={0} angle={-20} dy={10} />
                                 <YAxis allowDecimals={false} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
+                                <Legend wrapperStyle={{ color: '#94a3b8', fontSize: 12 }} />
                                 <Line type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2.5} dot={{ fill: '#6366f1', r: 4 }} activeDot={{ r: 6 }} name="Completed" />
+                                <Line type="monotone" dataKey="total" stroke="#a5b4fc" strokeWidth={2} dot={{ fill: '#a5b4fc', r: 3 }} name="Total" />
                             </LineChart>
                         ) : (
                             <BarChart data={viewType === 'month' ? monthlyData : yearlyData} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
