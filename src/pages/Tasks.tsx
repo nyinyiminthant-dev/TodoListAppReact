@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
     Plus, Search, SlidersHorizontal, X, Circle, CheckCircle2,
-    Pencil, Trash2, ArrowUpDown, Calendar, Clock, RefreshCw, Tag, Link2
+    Pencil, Trash2, ArrowUpDown, Calendar, Clock, RefreshCw, Tag, Link2,
+    Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays
 } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useNotifications } from '../hooks/useNotifications';
@@ -318,8 +319,14 @@ export default function Tasks() {
                                                 <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: `${priorityColors[task.priority]}20`, color: priorityColors[task.priority] }}>
                                                     {task.priority}
                                                 </span>
-                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: `${categoryColors[task.category]}20`, color: categoryColors[task.category] }}>
-                                                    <Tag className="w-3 h-3 inline mr-1" />{task.category}
+                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize flex items-center gap-1" style={{ background: `${categoryColors[task.category]}20`, color: categoryColors[task.category] }}>
+                                                    {task.category === 'work' && <Briefcase className="w-3 h-3" />}
+                                                    {task.category === 'personal' && <User2 className="w-3 h-3" />}
+                                                    {task.category === 'health' && <HeartPulse className="w-3 h-3" />}
+                                                    {task.category === 'shopping' && <ShoppingBag className="w-3 h-3" />}
+                                                    {task.category === 'studying' && <BookOpen className="w-3 h-3" />}
+                                                    {task.category === 'planning' && <CalendarDays className="w-3 h-3" />}
+                                                    {task.category}
                                                 </span>
                                                 {task.dueDate && (
                                                     <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-slate-400 flex items-center gap-1">
@@ -437,12 +444,12 @@ export default function Tasks() {
                                 <label className="text-xs font-medium text-slate-400 block mb-2">Category</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {([
-                                        { value: 'work', label: '💼 Work' },
-                                        { value: 'personal', label: '🙋 Personal' },
-                                        { value: 'health', label: '🏃 Health' },
-                                        { value: 'shopping', label: '🛒 Shopping' },
-                                        { value: 'studying', label: '📚 Studying' },
-                                        { value: 'planning', label: '📅 Planning' },
+                                        { value: 'work', label: 'Work', Icon: Briefcase },
+                                        { value: 'personal', label: 'Personal', Icon: User2 },
+                                        { value: 'health', label: 'Health', Icon: HeartPulse },
+                                        { value: 'shopping', label: 'Shopping', Icon: ShoppingBag },
+                                        { value: 'studying', label: 'Studying', Icon: BookOpen },
+                                        { value: 'planning', label: 'Planning', Icon: CalendarDays },
                                     ] as const).map(c => {
                                         const isActive = formData.category === c.value;
                                         const color = categoryColors[c.value];
@@ -451,12 +458,13 @@ export default function Tasks() {
                                                 key={c.value}
                                                 type="button"
                                                 onClick={() => setFormData(f => ({ ...f, category: c.value, planId: c.value !== 'planning' ? null : f.planId }))}
-                                                className="py-2.5 rounded-xl text-xs font-medium transition-all border"
+                                                className="py-2.5 rounded-xl text-xs font-medium transition-all border flex flex-col items-center gap-1"
                                                 style={isActive
                                                     ? { background: `${color}20`, borderColor: `${color}60`, color }
                                                     : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }
                                                 }
                                             >
+                                                <c.Icon className="w-5 h-5 mb-1" />
                                                 {c.label}
                                             </button>
                                         );
@@ -496,7 +504,7 @@ export default function Tasks() {
                                                         : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:bg-white/8'
                                                         }`}
                                                 >
-                                                    <span className="truncate">📅 {plan.title}</span>
+                                                    <span className="truncate flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" /> {plan.title}</span>
                                                     {formData.planId === plan.id && (
                                                         <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-pink-500/30 text-pink-300">linked</span>
                                                     )}

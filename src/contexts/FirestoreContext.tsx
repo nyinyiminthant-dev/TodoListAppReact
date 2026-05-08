@@ -35,11 +35,11 @@ const FirestoreContext = createContext<FirestoreContextType | undefined>(undefin
 
 const defaultCategories: CategoryData[] = [
   { id: 'work', name: 'Work', color: '#6366f1', icon: 'Briefcase' },
-  { id: 'personal', name: 'Personal', color: '#8b5cf6', icon: 'User' },
-  { id: 'health', name: 'Health', color: '#10b981', icon: 'Heart' },
-  { id: 'shopping', name: 'Shopping', color: '#f59e0b', icon: 'ShoppingCart' },
+  { id: 'personal', name: 'Personal', color: '#8b5cf6', icon: 'User2' },
+  { id: 'health', name: 'Health', color: '#10b981', icon: 'HeartPulse' },
+  { id: 'shopping', name: 'Shopping', color: '#f59e0b', icon: 'ShoppingBag' },
   { id: 'studying', name: 'Studying', color: '#06b6d4', icon: 'BookOpen' },
-  { id: 'planning', name: 'Planning', color: '#ec4899', icon: 'Calendar' },
+  { id: 'planning', name: 'Planning', color: '#ec4899', icon: 'CalendarDays' },
 ];
 
 export function FirestoreProvider({ children }: { children: ReactNode }) {

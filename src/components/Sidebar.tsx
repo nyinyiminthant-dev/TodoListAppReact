@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, CheckSquare, BarChart3, Target, Sparkles,
     Settings, LogOut, ChevronDown, Download, Upload, Trash2, Menu, X,
-    Sun, Moon, Palette
+    Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, ShoppingBag, CalendarDays, Waves, Sunset
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirestore } from '../contexts/FirestoreContext';
@@ -30,13 +30,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [appearanceOpen, setAppearanceOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const colorThemes: { id: ColorTheme; label: string; color: string; emoji: string }[] = [
-        { id: 'default', label: 'Default', color: '#6366f1', emoji: '✨' },
-        { id: 'study', label: 'Study', color: '#06b6d4', emoji: '📚' },
-        { id: 'work', label: 'Work', color: '#4f46e5', emoji: '💼' },
-        { id: 'health', label: 'Health', color: '#10b981', emoji: '🏃' },
-        { id: 'ocean', label: 'Ocean', color: '#0ea5e9', emoji: '🌊' },
-        { id: 'sunset', label: 'Sunset', color: '#f97316', emoji: '🌅' },
+    const colorThemes: { id: ColorTheme; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+        { id: 'default', label: 'Default', color: '#6366f1', Icon: Sparkles },
+        { id: 'study', label: 'Study', color: '#06b6d4', Icon: BookOpen },
+        { id: 'work', label: 'Work', color: '#4f46e5', Icon: Briefcase },
+        { id: 'health', label: 'Health', color: '#10b981', Icon: HeartPulse },
+        { id: 'ocean', label: 'Ocean', color: '#0ea5e9', Icon: Waves },
+        { id: 'sunset', label: 'Sunset', color: '#f97316', Icon: Sunset },
     ];
 
     // Close on Escape key
@@ -228,12 +228,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                                 }
                                             >
                                                 <span
-                                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
+                                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] mb-1"
                                                     style={{ background: t.color }}
                                                 >
-                                                    {colorTheme === t.id ? '✓' : ''}
+                                                    <t.Icon className="w-4 h-4 text-white" />
                                                 </span>
-                                                {t.emoji} {t.label}
+                                                {t.label}
                                             </button>
                                         ))}
                                     </div>
