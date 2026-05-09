@@ -355,7 +355,15 @@ export default function Tasks() {
                                         </div>
 
                                         {/* Actions */}
-                                        <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
+                                            <button onClick={() => handleEdit(task)} className="p-1.5 rounded-lg hover:bg-violet-500/20 text-slate-400 hover:text-violet-400 transition-all">
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => setConfirmDelete({ id: task.id, title: task.title })} className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        <div className="flex gap-1 shrink-0 sm:hidden">
                                             <button onClick={() => handleEdit(task)} className="p-1.5 rounded-lg hover:bg-violet-500/20 text-slate-400 hover:text-violet-400 transition-all">
                                                 <Pencil className="w-4 h-4" />
                                             </button>
