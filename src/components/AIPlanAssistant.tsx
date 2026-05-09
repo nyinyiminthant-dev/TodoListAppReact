@@ -36,7 +36,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
 
   const handleGetRecommendation = async () => {
     if (!goal.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     setRecommendation(null);
@@ -53,7 +53,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
 
   const handleGenerateTasks = async () => {
     if (!recommendation) return;
-    
+
     setLoading(true);
     setError(null);
 
@@ -65,13 +65,13 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
         recommendation.targetDate,
         recommendation.suggestedFrequency
       );
-      
+
       const editableTasks: EditableTask[] = tasks.map((t, i) => ({
         ...t,
         id: `task-${i}-${Date.now()}`,
         completed: false,
       }));
-      
+
       setGeneratedTasks(editableTasks);
       setStep('tasks');
     } catch {
@@ -93,7 +93,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
 
   const handleCreateTasks = async () => {
     if (generatedTasks.length === 0) return;
-    
+
     setCreatingTasks(true);
     setError(null);
 
@@ -110,6 +110,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
           startDate: null,
           recurring: 'none',
           planId: null,
+          userId: '',
         });
       }
       setTasksCreated(true);
@@ -294,7 +295,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                   {recommendation && (
                     <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4 space-y-3 animate-slide-in">
                       <p className="text-xs font-medium text-amber-400 uppercase tracking-wider">AI Recommendation</p>
-                      
+
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-slate-400" />
