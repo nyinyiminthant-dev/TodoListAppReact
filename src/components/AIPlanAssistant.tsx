@@ -224,12 +224,16 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                         <Zap className="w-3 h-3" /> Hours/week
                       </label>
                       <input
-                        type="number"
-                        min={1}
-                        max={60}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[1-9][0-9]*"
                         className="input"
-                        value={hoursPerWeek}
-                        onChange={e => setHoursPerWeek(Number(e.target.value))}
+                        value={hoursPerWeek || ''}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          setHoursPerWeek(val ? Math.min(60, Math.max(1, parseInt(val, 10))) : 0);
+                        }}
+                        placeholder="10"
                       />
                     </div>
                     <div>
