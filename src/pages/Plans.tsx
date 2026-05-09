@@ -470,7 +470,42 @@ export default function Plans() {
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Count</label>
-                                    <input type="number" min={1} className="input" value={formData.targetCount} onChange={e => setFormData(f => ({ ...f, targetCount: Number(e.target.value) }))} />
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(f => ({ ...f, targetCount: Math.max(1, f.targetCount - 1) }))}
+                                            className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-lg font-bold flex items-center justify-center"
+                                        >
+                                            -
+                                        </button>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            className="input text-center w-20"
+                                            value={formData.targetCount}
+                                            onChange={e => {
+                                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                                if (val === '') {
+                                                    setFormData(f => ({ ...f, targetCount: 1 }));
+                                                } else {
+                                                    setFormData(f => ({ ...f, targetCount: parseInt(val, 10) || 1 }));
+                                                }
+                                            }}
+                                            onBlur={e => {
+                                                if (!e.target.value || parseInt(e.target.value, 10) < 1) {
+                                                    setFormData(f => ({ ...f, targetCount: 1 }));
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(f => ({ ...f, targetCount: f.targetCount + 1 }))}
+                                            className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-lg font-bold flex items-center justify-center"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
