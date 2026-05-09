@@ -527,9 +527,9 @@ export default function Tasks() {
                             )}
 
                             {/* Dates */}
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startDate') || 'Start Date'}</label>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startDate')}</label>
                                     <input type="date" className="input" value={formData.startDate} onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))} />
                                 </div>
                                 <div>
