@@ -164,9 +164,9 @@ export const translations = {
     noTasksDueToday: 'ဒီနေ့ အလုပ်မရှိပါ',
     recentActivity: 'မကြာမီ လုပ်ဆောင်ချက်များ',
     noActivityYet: 'လုပ်ဆငငခတမရသညည',
-    completeTaskToSeeHere: 'အလလပတရငင ဒမတဝရမညည',
-    activePlans: 'လှုပ်ရှားနေသော အစီအစဉ်များ',
-    noActivePlans: 'လှုပ်ရှားနေသော အစီအစဉ်မရှိ',
+    completeTaskToSeeHere: 'အလုပ်တစ်ခုပြီးဆုံးပါက ဒီမှာမြင်ရပါမည်',
+    activePlans: 'လုပ်လက်စ အစီအစဉ်များ',
+    noActivePlans: 'လုပ်လက်စ အစီအစဉ်မရှိ',
     setGoalToTrack: 'သင့်တိုးတက်မှုကို စောင့်ကြည့်ရန် ပန်းတိုင်တစ်ခုသတ်မှတ်ပါ',
     createPlan: 'အစီအစဉ်ဖန်တီးမည်',
 
