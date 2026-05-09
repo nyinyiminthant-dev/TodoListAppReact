@@ -7,6 +7,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# --- Environment Secrets (CRITICAL) ---
+# This prevents GitHub Secret Scanning errors 
+.env
+.env.local
+.env.*.local
+*.env.local
+
 node_modules
 dist
 dist-ssr

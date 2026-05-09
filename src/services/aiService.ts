@@ -1,15 +1,22 @@
-import { initializeApp } from 'firebase/app';
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+if (!OPENROUTER_API_KEY) {
+  throw new Error('VITE_OPENROUTER_API_KEY is not set in environment variables');
+}
 
-initializeApp(firebaseConfig);
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
 
 export interface PlanRecommendation {
   targetDate: string;
@@ -31,22 +38,6 @@ export interface GeneratedTask {
   dueDate: string;
   dueTime: string;
   category: 'work' | 'personal' | 'health' | 'shopping' | 'studying' | 'planning';
-}
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAuVZyKrgtbojlP7atrvf7N8IcKLxbvqMM';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
-
-function formatDateLocal(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
 }
 
 export async function generatePlanRecommendation(
@@ -80,16 +71,18 @@ Rules:
 - targetCount should be achievable given available hours
 - Consider the complexity of the goal when setting targets`;
 
-  const response = await fetch(GEMINI_API_URL, {
+  const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-goog-api-key': GEMINI_API_KEY,
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': window.location.origin,
+      'X-Title': 'TodoList App',
     },
     body: JSON.stringify({
-      contents: [{
-        parts: [{ text: prompt }]
-      }]
+      model: 'openrouter/free',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 500,
     }),
   });
 
@@ -99,7 +92,7 @@ Rules:
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  const text = data.choices?.[0]?.message?.content?.trim() || '';
 
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -180,16 +173,18 @@ Rules:
 - dueTime should be empty string (not "00:00")
 - Include relevant category based on the goal`;
 
-  const response = await fetch(GEMINI_API_URL, {
+  const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-goog-api-key': GEMINI_API_KEY,
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': window.location.origin,
+      'X-Title': 'TodoList App',
     },
     body: JSON.stringify({
-      contents: [{
-        parts: [{ text: prompt }]
-      }]
+      model: 'openrouter/free',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
     }),
   });
 
@@ -199,7 +194,7 @@ Rules:
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  const text = data.choices?.[0]?.message?.content?.trim() || '';
 
   try {
     const jsonMatch = text.match(/\[[\s\S]*\]/);

@@ -123,6 +123,7 @@ export default function Tasks() {
             category: task.category,
             dueDate: task.dueDate,
             dueTime: task.dueTime,
+            startDate: task.startDate ?? '',
             recurring: task.recurring,
             planId: task.planId ?? null,
         });
@@ -253,7 +254,7 @@ export default function Tasks() {
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-slate-400 hover:text-white transition-all"
                     >
                         <ArrowUpDown className="w-4 h-4" />
-                        {sortOrder === 'asc' ? t('today') : t('later')}
+                        {sortOrder === 'asc' ? t('earliest') : t('latest')}
                     </button>
                 </div>
             </div>
