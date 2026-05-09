@@ -83,7 +83,8 @@ export default function Analytics() {
             const weekEnd = endOfWeek(weekStart);
             const weekTasks = tasks.filter(t => t.dueDate && isWithinInterval(parseISO(t.dueDate), { start: weekStart, end: weekEnd }));
             return {
-                week: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
+                week: `${format(weekStart, 'M/d')}-${format(weekEnd, 'M/d')}`,
+                weekFull: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
                 completed: weekTasks.filter(t => t.status === 'completed').length,
                 total: weekTasks.length,
             };
@@ -119,14 +120,14 @@ export default function Analytics() {
             </div>
 
             {/* Controls */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
                 {/* View toggle */}
                 <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
                     {(['month', 'week', 'year'] as ViewType[]).map(v => (
                         <button
                             key={v}
                             onClick={() => setViewType(v)}
-                            className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-all ${viewType === v ? 'bg-violet-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+                            className={`px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-all ${viewType === v ? 'bg-violet-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}
                         >
                             {v}
                         </button>
@@ -169,10 +170,12 @@ export default function Analytics() {
                         {viewType === 'week' ? (
                             <LineChart data={weeklyData} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                                <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} interval={0} angle={-20} dy={10} />
+                                <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} interval={0} angle={-45} dy={15} />
                                 <YAxis allowDecimals={false} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-                                <Tooltip contentStyle={tooltipStyle} />
-                                <Legend wrapperStyle={{ color: '#94a3b8', fontSize: 12 }} />
+                                <Tooltip contentStyle={tooltipStyle} labelFormatter={(label) => {
+                                    const data = weeklyData.find(d => d.week === label);
+                                    return data?.weekFull || label;
+                                }} />
                                 <Line type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2.5} dot={{ fill: '#6366f1', r: 4 }} activeDot={{ r: 6 }} name="Completed" />
                                 <Line type="monotone" dataKey="total" stroke="#a5b4fc" strokeWidth={2} dot={{ fill: '#a5b4fc', r: 3 }} name="Total" />
                             </LineChart>
@@ -182,12 +185,21 @@ export default function Analytics() {
                                 <XAxis dataKey={viewType === 'month' ? 'date' : 'month'} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <YAxis allowDecimals={false} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
-                                <Legend wrapperStyle={{ color: '#94a3b8', fontSize: 12 }} />
                                 <Bar dataKey="completed" name="Completed" fill="#6366f1" radius={[4, 4, 0, 0]} />
                                 <Bar dataKey="total" name="Total" fill="rgba(99,102,241,0.25)" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         )}
                     </ResponsiveContainer>
+                </div>
+                <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-white/10">
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-1.5 rounded-full bg-violet-500" />
+                        <span className="text-sm text-slate-300 font-medium">Completed</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-4 h-1.5 rounded-full bg-indigo-300" />
+                        <span className="text-sm text-slate-300 font-medium">Total</span>
+                    </div>
                 </div>
             </div>
 
