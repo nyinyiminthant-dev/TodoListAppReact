@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 
 interface ConfirmDialogProps {
@@ -10,11 +11,21 @@ interface ConfirmDialogProps {
 
 export default function ConfirmDialog({ title, message, confirmLabel = 'Delete', onConfirm, onCancel }: ConfirmDialogProps) {
     return (
-        <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
             onClick={e => e.target === e.currentTarget && onCancel()}
         >
-            <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-white/10 shadow-2xl animate-scale-in p-6">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="w-full max-w-sm rounded-3xl bg-slate-900 border border-white/10 shadow-2xl p-6"
+            >
                 <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto mb-4">
                     <Trash2 className="w-7 h-7 text-rose-400" />
                 </div>
@@ -36,7 +47,7 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Delete',
                         {confirmLabel}
                     </button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

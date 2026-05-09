@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import {
     Plus, Search, SlidersHorizontal, X, Circle, CheckCircle2,
     Pencil, Trash2, ArrowUpDown, Calendar, Clock, RefreshCw, Tag, Link2,
@@ -206,14 +207,16 @@ export default function Tasks() {
             {toast && <Toast {...toast} onClose={closeToast} />}
 
             {/* Confirm Delete Dialog */}
-            {confirmDelete && (
-                <ConfirmDialog
-                    title="Delete Task?"
-                    message={`"${confirmDelete.title}" will be permanently removed.`}
-                    onConfirm={handleDeleteConfirm}
-                    onCancel={() => setConfirmDelete(null)}
-                />
-            )}
+            <AnimatePresence>
+                {confirmDelete && (
+                    <ConfirmDialog
+                        title="Delete Task?"
+                        message={`"${confirmDelete.title}" will be permanently removed.`}
+                        onConfirm={handleDeleteConfirm}
+                        onCancel={() => setConfirmDelete(null)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">

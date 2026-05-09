@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, CheckSquare, BarChart3, Target, Sparkles,
     Settings, LogOut, ChevronDown, Download, Upload, Trash2, Menu, X,
@@ -11,6 +12,7 @@ import { useFirestore } from '../contexts/FirestoreContext';
 import { useTheme, ColorTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Language } from '../contexts/LanguageContext';
+import ConfirmDialog from './ConfirmDialog';
 
 const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'dashboard' as const, end: true },
@@ -33,6 +35,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [appearanceOpen, setAppearanceOpen] = useState(false);
     const [languageOpen, setLanguageOpen] = useState(false);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const colorThemes: { id: ColorTheme; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -81,9 +84,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     };
 
     const handleClear = async () => {
-        if (window.confirm('Are you sure you want to delete ALL tasks and plans? This cannot be undone.')) {
-            await clearAllData();
-        }
+        setShowClearConfirm(true);
+    };
+
+    const handleClearConfirm = async () => {
+        setShowClearConfirm(false);
+        await clearAllData();
     };
 
     const handleSignOut = async () => {
@@ -382,6 +388,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </button>
                 </div>
             </aside>
-        </>
+        <AnimatePresence>
+                {showClearConfirm && (
+                    <ConfirmDialog
+                        title={t('clearAllData')}
+                        message="Are you sure you want to delete ALL tasks and plans? This cannot be undone."
+                        confirmLabel={t('delete')}
+                        onConfirm={handleClearConfirm}
+                        onCancel={() => setShowClearConfirm(false)}
+                    />
+                )}
+            </AnimatePresence>
+            </>
     );
 }
