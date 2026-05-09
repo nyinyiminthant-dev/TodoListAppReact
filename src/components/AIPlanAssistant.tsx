@@ -17,6 +17,7 @@ interface EditableTask extends GeneratedTask {
 export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
   const { addTask } = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [step, setStep] = useState<'plan' | 'tasks'>('plan');
   const [goal, setGoal] = useState('');
   const [hoursPerWeek, setHoursPerWeek] = useState(10);
@@ -131,15 +132,19 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
   };
 
   const handleClose = () => {
-    setIsOpen(false);
-    setGoal('');
-    setHoursPerWeek(10);
-    setFrequency('daily');
-    setRecommendation(null);
-    setGeneratedTasks([]);
-    setError(null);
-    setStep('plan');
-    setTasksCreated(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+      setGoal('');
+      setHoursPerWeek(10);
+      setFrequency('daily');
+      setRecommendation(null);
+      setGeneratedTasks([]);
+      setError(null);
+      setStep('plan');
+      setTasksCreated(false);
+    }, 200);
   };
 
   const handleBack = () => {
@@ -173,10 +178,10 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
           onClick={e => e.target === e.currentTarget && handleClose()}
         >
-          <div className="w-full max-w-2xl rounded-3xl bg-slate-900 border border-white/10 shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden flex flex-col">
+          <div className={`w-full max-w-2xl rounded-3xl bg-slate-900 border border-white/10 shadow-2xl ${isClosing ? 'animate-scale-out' : 'animate-scale-in'} max-h-[90vh] overflow-hidden flex flex-col`}>
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
