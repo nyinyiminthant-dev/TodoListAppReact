@@ -7,7 +7,7 @@ export const translations = {
     tasks: 'Tasks',
     analytics: 'Analytics',
     plans: 'Plans',
-    
+
     // Dashboard
     goodMorning: 'Good Morning',
     goodAfternoon: 'Good Afternoon',
@@ -28,7 +28,7 @@ export const translations = {
     noActivePlans: 'No active plans',
     setGoalToTrack: 'Set a goal to track your progress',
     createPlan: 'Create Plan',
-    
+
     // Tasks
     newTask: 'New Task',
     editTask: 'Edit Task',
@@ -68,7 +68,7 @@ export const translations = {
     cancel: 'Cancel',
     save: 'Save',
     delete: 'Delete',
-    
+
     // Plans
     newPlan: 'New Plan',
     editPlan: 'Edit Plan',
@@ -87,7 +87,7 @@ export const translations = {
     dueToday: 'Due today',
     daysLeft: 'days left',
     applyToPlan: 'Apply to Plan',
-    
+
     // AI Plan Assistant
     aiAssist: 'AI Assist',
     aiPlanAssistant: 'AI Plan Assistant',
@@ -110,7 +110,7 @@ export const translations = {
     createPlanOnly: 'Create Plan Only',
     tasksReadyToCreate: 'tasks ready to create',
     tasksCreatedSuccessfully: 'Tasks created successfully!',
-    
+
     // Analytics
     trackYourTrends: 'Track your task completion trends',
     month: 'Month',
@@ -122,7 +122,7 @@ export const translations = {
     weeklyTrend: 'Weekly Trend',
     monthlyOverview: 'Monthly Overview',
     completedByCategory: 'Completed by Category',
-    
+
     // Settings / Sidebar
     appearance: 'Appearance',
     mode: 'Mode',
@@ -137,43 +137,43 @@ export const translations = {
     language: 'Language',
     english: 'English',
     burmese: 'Burmese',
-    
+
     // Common
     user: 'User',
   },
-  
+
   my: {
     // Navigation
-    dashboard: 'ဒိုရှ်ဘိုးဒ်',
-    tasks: 'အိုင်ဒီ',
-    analytics: 'အင်မတိုက်',
+    dashboard: 'ဒက်ရှ်ဘုတ်',
+    tasks: 'အလုပ်များ',
+    analytics: 'သုံးသပ်ချက်များ',
     plans: 'အစီအစဉ်များ',
-    
+
     // Dashboard
-    goodMorning: 'မင်္ဂလာနံနက်ပိုင်း',
-    goodAfternoon: 'မင်္ဂလာနေ့လည်',
-    goodEvening: 'မင်္ဂလာညနေ',
-    todayOverview: 'ဒီနေ့ သင့်အိုင်ဒီများ ဘာတွေဖြစ်နေလဲ',
-    totalTasks: 'စုစုပေါင်းအိုင်ဒီ',
+    goodMorning: 'မင်္ဂလာနံနက်ခင်းပါ',
+    goodAfternoon: 'မင်္ဂလာနေ့လည်ခင်းပါ',
+    goodEvening: 'မင်္ဂလာညနေခင်းပါ',
+    todayOverview: 'ဒီနေ့ သင့်အလုပ်များ ဘာတွေဖြစ်နေလဲ',
+    totalTasks: 'စုစုပေါင်းအလုပ်များ',
     completed: 'ပြီးပါပြီ',
     pending: 'စောင့်ဆိုင်း',
     overdue: 'ကျွန်ုပ်',
-    todaysTasks: 'ဒီနေ့အိုင်ဒီများ',
+    todaysTasks: 'ဒီနေ့အလုပ်များ',
     viewAll: 'အားလုံးကြည့်မည်',
     allCaughtUp: 'အားလုံးပြီးပါပြီ!',
-    noTasksDueToday: 'ဒီနေ့ အိုင်ဒီမရှိပါ',
+    noTasksDueToday: 'ဒီနေ့ အလုပ်မရှိပါ',
     recentActivity: 'မကြာမီ လုပ်ဆောင်ချက်များ',
-    noActivityYet: 'လုပ်ဆောင်ချက်မရှိသေး',
-    completeTaskToSeeHere: 'အိုင်ဒီပြီးရင် ဒီမှာတွေ့ရမည်',
+    noActivityYet: 'လုပ်ဆငငခတမရသညည',
+    completeTaskToSeeHere: 'အလလပတရငင ဒမတဝရမညည',
     activePlans: 'လှုပ်ရှားနေသော အစီအစဉ်များ',
     noActivePlans: 'လှုပ်ရှားနေသော အစီအစဉ်မရှိ',
     setGoalToTrack: 'သင့်တိုးတက်မှုကို စောင့်ကြည့်ရန် ပန်းတိုင်တစ်ခုသတ်မှတ်ပါ',
     createPlan: 'အစီအစဉ်ဖန်တီးမည်',
-    
+
     // Tasks
-    newTask: 'အိုင်ဒီအသစ်',
-    editTask: 'အိုင်ဒီပြင်မည်',
-    searchTasks: 'အိုင်ဒီရှာဖွေမည်...',
+    newTask: 'အလုပ်အသစ်',
+    editTask: 'အလုပ်ပြင်မည်',
+    searchTasks: 'အလုပ်ရှာဖွေမည်...',
     all: 'အားလုံး',
     overdueGroup: 'ကျွန်ုပ်သည်',
     today: 'ဒီနေ့',
@@ -182,8 +182,8 @@ export const translations = {
     later: 'နောက်မှ',
     noDueDate: 'နေ့မသတ်မှတ်',
     completedGroup: 'ပြီးပါပြီ',
-    noTasksFound: 'အိုင်ဒီမတွေ့',
-    tryAdjustingFilters: 'စစ်ထုတ်မှုများပြောင်းလဲပါ သို့မဟုတ် အိုင်ဒီအသစ်ဖန်တီးပါ',
+    noTasksFound: 'အလုပ်မတွေ့',
+    tryAdjustingFilters: 'စစ်ထုတ်မှုများပြောင်းလဲပါ သို့မဟုတ် အလုပ်အသစ်ဖန်တီးပါ',
     title: 'ခေါင်းစဉ်',
     description: 'ဖော်ပြချက်',
     priority: 'ဦးစား',
@@ -209,7 +209,7 @@ export const translations = {
     cancel: 'မလုပ်ပါ',
     save: 'သိမ်းမည်',
     delete: 'ဖျက်မည်',
-    
+
     // Plans
     newPlan: 'အစီအစဉ်အသစ်',
     editPlan: 'အစီအစဉ်ပြင်မည်',
@@ -228,7 +228,7 @@ export const translations = {
     dueToday: 'ဒီနေ့ပြီးဆုံး',
     daysLeft: 'ရက်ကျန်',
     applyToPlan: 'အစီအစဉ်သို့သတ်မှတ်မည်',
-    
+
     // AI Plan Assistant
     aiAssist: 'AI ကူညီမည်',
     aiPlanAssistant: 'AI အစီအစဉ်ကူညီသူ',
@@ -251,7 +251,7 @@ export const translations = {
     createPlanOnly: 'အစီအစဉ်တစ်ခုဖန်တီးမည်',
     tasksReadyToCreate: 'tasks ready to create',
     tasksCreatedSuccessfully: 'အိုင်ဒီများဖန်တီးပြီးပါပြီ!',
-    
+
     // Analytics
     trackYourTrends: 'သင့်အိုင်ဒီပြီးဆုံးမှု trend များကို ခြေရာခံမည်',
     month: 'လ',
@@ -263,7 +263,7 @@ export const translations = {
     weeklyTrend: 'အပတ်စဉ် trend',
     monthlyOverview: 'လစဉ်သုံးသပ်ချက်',
     completedByCategory: 'အမျိုးအစားအလိုက် ပြီးဆုံး',
-    
+
     // Settings / Sidebar
     appearance: 'အသွင်အပြင်',
     mode: 'မုဒ်',
@@ -278,7 +278,7 @@ export const translations = {
     language: 'ဘာသာစကား',
     english: 'English',
     burmese: 'မြန်မာ',
-    
+
     // Common
     user: 'အသုံးပြုသူ',
   },
