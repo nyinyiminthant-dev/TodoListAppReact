@@ -35,6 +35,7 @@ const emptyForm = {
     category: 'personal' as Category,
     dueDate: '',
     dueTime: '',
+    startDate: '',
     recurring: 'none' as Task['recurring'],
     planId: null as string | null,
 };
@@ -142,7 +143,7 @@ export default function Tasks() {
                 await addTask({
                     ...formData,
                     status: 'pending',
-                    startDate: null,
+                    startDate: formData.startDate || null,
                     planId: formData.planId,
                     userId: '',
                 });
@@ -526,7 +527,11 @@ export default function Tasks() {
                             )}
 
                             {/* Dates */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startDate') || 'Start Date'}</label>
+                                    <input type="date" className="input" value={formData.startDate} onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))} />
+                                </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueDate')}</label>
                                     <input type="date" className="input" value={formData.dueDate} onChange={e => setFormData(f => ({ ...f, dueDate: e.target.value }))} />
