@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, X, Pencil, Trash2, ChevronDown, ChevronUp, Calendar, CheckCircle2 } from 'lucide-react';
+import { Plus, X, Pencil, Trash2, ChevronDown, ChevronUp, Calendar, CheckCircle2, Sparkles, Loader2, ListChecks } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { Plan, PlanStatus } from '../types';
 import { parseISO, differenceInDays, format } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AIPlanAssistant from '../components/AIPlanAssistant';
+import { generateTasksFromPlan, GeneratedTask } from '../services/aiService';
 
 // Firestore returns serverTimestamp fields as Timestamp objects, not strings.
 // This helper converts either format to a JS Date safely.
@@ -78,18 +79,31 @@ const templates = [
     { label: '30-Day Challenge', days: 30, count: 30 },
 ];
 
-const emptyForm = { title: '', description: '', targetDate: '', targetCount: 10 };
+const getDefaultTargetDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().split('T')[0];
+};
+
+const emptyForm = { title: '', description: '', targetDate: getDefaultTargetDate(), targetCount: 10 };
 
 export default function Plans() {
-    const { plans, tasks, addPlan, updatePlan, deletePlan } = useFirestore();
+    const { plans, tasks, addPlan, updatePlan, deletePlan, addTask } = useFirestore();
     const [showForm, setShowForm] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-    const [formData, setFormData] = useState(emptyForm);
+    const [formData, setFormData] = useState({ ...emptyForm });
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState<ToastState | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
     const [isClosing, setIsClosing] = useState(false);
+    const [aiTaskModal, setAiTaskModal] = useState<{ plan: Plan; tasks: EditableTask[] } | null>(null);
+    const [generatingTasks, setGeneratingTasks] = useState(false);
+    const [creatingTasks, setCreatingTasks] = useState(false);
+
+    interface EditableTask extends GeneratedTask {
+        id: string;
+    }
 
     const closeToast = useCallback(() => setToast(null), []);
 
@@ -121,7 +135,7 @@ export default function Plans() {
         [selectedPlan, tasks]
     );
 
-    const resetForm = () => { setFormData(emptyForm); setEditingPlan(null); };
+    const resetForm = () => { setFormData({ ...emptyForm }); setEditingPlan(null); };
     const closeForm = () => {
         setIsClosing(true);
         setTimeout(() => {
@@ -185,6 +199,72 @@ export default function Plans() {
             setToast({ type: 'error', message: 'Failed to delete plan.' });
         } finally {
             setConfirmDelete(null);
+        }
+    };
+
+    const handleAIGenerateTasks = async (plan: Plan) => {
+        setGeneratingTasks(true);
+        try {
+            const generated = await generateTasksFromPlan(
+                plan.title,
+                plan.description,
+                plan.targetCount,
+                plan.targetDate,
+                'daily'
+            );
+            const editableTasks: EditableTask[] = generated.map((t, i) => ({
+                ...t,
+                id: `task-${i}-${Date.now()}`,
+            }));
+            setAiTaskModal({ plan, tasks: editableTasks });
+        } catch {
+            setToast({ type: 'error', message: 'Failed to generate tasks.' });
+        } finally {
+            setGeneratingTasks(false);
+        }
+    };
+
+    const handleUpdateModalTask = (id: string, field: keyof GeneratedTask, value: string) => {
+        if (!aiTaskModal) return;
+        setAiTaskModal({
+            ...aiTaskModal,
+            tasks: aiTaskModal.tasks.map(t => t.id === id ? { ...t, [field]: value } : t)
+        });
+    };
+
+    const handleDeleteModalTask = (id: string) => {
+        if (!aiTaskModal) return;
+        setAiTaskModal({
+            ...aiTaskModal,
+            tasks: aiTaskModal.tasks.filter(t => t.id !== id)
+        });
+    };
+
+    const handleCreateTasksFromModal = async () => {
+        if (!aiTaskModal || aiTaskModal.tasks.length === 0) return;
+        setCreatingTasks(true);
+        try {
+            for (const task of aiTaskModal.tasks) {
+                await addTask({
+                    title: task.title,
+                    description: task.description,
+                    priority: task.priority,
+                    category: task.category,
+                    status: 'pending',
+                    dueDate: task.dueDate,
+                    dueTime: task.dueTime || '',
+                    startDate: null,
+                    recurring: 'none',
+                    planId: aiTaskModal.plan.id,
+                    userId: '',
+                });
+            }
+            setToast({ type: 'success', message: `${aiTaskModal.tasks.length} tasks created and linked to plan!` });
+            setAiTaskModal(null);
+        } catch {
+            setToast({ type: 'error', message: 'Failed to create tasks.' });
+        } finally {
+            setCreatingTasks(false);
         }
     };
 
@@ -312,7 +392,21 @@ export default function Plans() {
                                     {/* Linked tasks */}
                                     {isExpanded && (
                                         <div className="mt-4 pt-4 border-t border-white/10 animate-slide-in">
-                                            <p className="text-xs text-slate-400 font-medium mb-2">Linked Tasks ({linkedTasks.length})</p>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <p className="text-xs text-slate-400 font-medium">Linked Tasks ({linkedTasks.length})</p>
+                                                <button
+                                                    onClick={() => handleAIGenerateTasks(plan)}
+                                                    disabled={generatingTasks}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-500/20 to-cyan-500/20 border border-teal-500/30 text-teal-400 text-xs font-medium hover:from-teal-500/30 hover:to-cyan-500/30 transition-all disabled:opacity-50"
+                                                >
+                                                    {generatingTasks ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Sparkles className="w-3.5 h-3.5" />
+                                                    )}
+                                                    AI Generate Tasks
+                                                </button>
+                                            </div>
                                             {linkedTasks.length === 0 ? (
                                                 <p className="text-xs text-slate-500">No tasks linked to this plan yet.</p>
                                             ) : (
@@ -360,7 +454,7 @@ export default function Plans() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Date *</label>
-                                    <input type="date" className="input" value={formData.targetDate} onChange={e => setFormData(f => ({ ...f, targetDate: e.target.value }))} required />
+                                    <input type="date" className="input" value={formData.targetDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData(f => ({ ...f, targetDate: e.target.value }))} required />
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Count</label>
@@ -385,6 +479,118 @@ export default function Plans() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* AI Task Generation Modal */}
+            {aiTaskModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+                    onClick={e => e.target === e.currentTarget && setAiTaskModal(null)}
+                >
+                    <div className="w-full max-w-2xl rounded-3xl bg-slate-900 border border-white/10 shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 shrink-0">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                                    <Sparkles className="w-4 h-4 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">AI Generated Tasks</h2>
+                                    <p className="text-xs text-slate-400">For: {aiTaskModal.plan.title}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setAiTaskModal(null)} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto flex-1 space-y-3">
+                            {aiTaskModal.tasks.map((task, index) => (
+                                <div key={task.id} className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <span className="text-xs text-slate-500 shrink-0 pt-1">#{index + 1}</span>
+                                        <div className="flex-1 space-y-2">
+                                            <input
+                                                type="text"
+                                                className="input text-sm font-medium"
+                                                value={task.title}
+                                                onChange={e => handleUpdateModalTask(task.id, 'title', e.target.value)}
+                                                placeholder="Task title"
+                                            />
+                                            <input
+                                                type="text"
+                                                className="input text-xs"
+                                                value={task.description}
+                                                onChange={e => handleUpdateModalTask(task.id, 'description', e.target.value)}
+                                                placeholder="Description (optional)"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => handleDeleteModalTask(task.id)}
+                                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all shrink-0"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-2 ml-8">
+                                        <div>
+                                            <label className="text-xs text-slate-500 block mb-1">Due Date</label>
+                                            <input
+                                                type="date"
+                                                className="input text-xs"
+                                                value={task.dueDate}
+                                                onChange={e => handleUpdateModalTask(task.id, 'dueDate', e.target.value)}
+                                                min={new Date().toISOString().split('T')[0]}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-slate-500 block mb-1">Due Time</label>
+                                            <input
+                                                type="time"
+                                                className="input text-xs"
+                                                value={task.dueTime}
+                                                onChange={e => handleUpdateModalTask(task.id, 'dueTime', e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-slate-500 block mb-1">Priority</label>
+                                            <select
+                                                className="input text-xs cursor-pointer"
+                                                style={{ background: 'rgba(255, 255, 255, 0.06)' }}
+                                                value={task.priority}
+                                                onChange={e => handleUpdateModalTask(task.id, 'priority', e.target.value)}
+                                            >
+                                                <option value="high">High</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="low">Low</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="p-6 pt-4 border-t border-white/10 shrink-0">
+                            <button
+                                onClick={handleCreateTasksFromModal}
+                                disabled={creatingTasks || aiTaskModal.tasks.length === 0}
+                                className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-medium hover:opacity-90 transition-all shadow-lg shadow-teal-500/30 disabled:opacity-60 flex items-center justify-center gap-2"
+                            >
+                                {creatingTasks ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Creating Tasks...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ListChecks className="w-4 h-4" />
+                                        Create {aiTaskModal.tasks.length} Tasks
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

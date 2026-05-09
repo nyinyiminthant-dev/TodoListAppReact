@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 admin.initializeApp();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyAXeoiq81F359GMzIDSKMoGyemVEqBw7Xc');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyAuVZyKrgtbojlP7atrvf7N8IcKLxbvqMM');
 
 interface PlanRequest {
   goal: string;
