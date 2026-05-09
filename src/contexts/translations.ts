@@ -214,7 +214,7 @@ export const translations = {
     newPlan: 'အစီအစဉ်အသစ်',
     editPlan: 'အစီအစဉ်ပြင်မည်',
     totalGoals: 'စုစုပေါင်းပန်းတိုင်',
-    onTrack: 'လမ်းကြောင်းပေါ်',
+    onTrack: 'လုပ်လက်စ',
     atRisk: 'အန္တရာယ်ရှိ',
     completedGroup: 'ပြီးပါပြီ',
     failed: 'မအောင်မြင်',
