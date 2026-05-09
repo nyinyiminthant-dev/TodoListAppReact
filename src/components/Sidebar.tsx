@@ -15,8 +15,8 @@ import { Language } from '../contexts/LanguageContext';
 const navItems = [
     { path: '/', icon: LayoutDashboard, labelKey: 'dashboard' as const, end: true },
     { path: '/tasks', icon: CheckSquare, labelKey: 'tasks' as const, end: false },
-    { path: '/analytics', icon: BarChart3, labelKey: 'analytics' as const, end: false },
     { path: '/plans', icon: Target, labelKey: 'plans' as const, end: false },
+    { path: '/analytics', icon: BarChart3, labelKey: 'analytics' as const, end: false },
 ];
 
 interface SidebarProps {
