@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Task, Plan, Priority, Category } from '../types';
 import { parseISO, isToday, isTomorrow, isPast, format, isWithinInterval, addDays } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
@@ -66,6 +67,7 @@ function groupTasks(tasks: Task[]) {
 
 export default function Tasks() {
     const { tasks, plans, addTask, updateTask, deleteTask } = useFirestore();
+    const { t } = useLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
     useNotifications();
 
@@ -222,7 +224,7 @@ export default function Tasks() {
                     className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 shrink-0"
                 >
                     <Plus className="w-4 h-4" />
-                    New Task
+                    {t('newTask')}
                 </button>
             </div>
 
@@ -233,7 +235,7 @@ export default function Tasks() {
                     <input
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="Search tasks…"
+                        placeholder={t('searchTasks')}
                         className="input !pl-9"
                     />
                 </div>
@@ -243,14 +245,14 @@ export default function Tasks() {
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${showFilters ? 'bg-violet-500/20 border-violet-500/40 text-violet-300' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}
                     >
                         <SlidersHorizontal className="w-4 h-4" />
-                        Filters
+                        {t('all')}
                     </button>
                     <button
                         onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-slate-400 hover:text-white transition-all"
                     >
                         <ArrowUpDown className="w-4 h-4" />
-                        {sortOrder === 'asc' ? 'Earliest' : 'Latest'}
+                        {sortOrder === 'asc' ? t('today') : t('later')}
                     </button>
                 </div>
             </div>
@@ -380,8 +382,8 @@ export default function Tasks() {
 
                 {filteredTasks.length === 0 && (
                     <div className="text-center py-20 text-slate-400">
-                        <p className="text-lg font-medium text-white mb-2">No tasks found</p>
-                        <p className="text-sm">Try adjusting your filters or create a new task.</p>
+                        <p className="text-lg font-medium text-white mb-2">{t('noTasksFound')}</p>
+                        <p className="text-sm">{t('tryAdjustingFilters')}</p>
                     </div>
                 )}
             </div>
@@ -394,7 +396,7 @@ export default function Tasks() {
                 >
                     <div className={`w-full max-w-lg rounded-3xl bg-slate-900 border border-white/10 shadow-2xl ${isClosing ? 'animate-scale-out' : 'animate-scale-in'}`}>
                         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
-                            <h2 className="text-lg font-semibold text-white">{editingTask ? 'Edit Task' : 'New Task'}</h2>
+                            <h2 className="text-lg font-semibold text-white">{editingTask ? t('editTask') : t('newTask')}</h2>
                             <button onClick={closeForm} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all">
                                 <X className="w-5 h-5" />
                             </button>
@@ -403,10 +405,10 @@ export default function Tasks() {
                         <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
                             {/* Title */}
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Title *</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('title')} *</label>
                                 <input
                                     className="input"
-                                    placeholder="What needs to be done?"
+                                    placeholder={t('description')}
                                     value={formData.title}
                                     onChange={e => setFormData(f => ({ ...f, title: e.target.value }))}
                                     required
@@ -416,11 +418,11 @@ export default function Tasks() {
 
                             {/* Description */}
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Description</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('description')}</label>
                                 <textarea
                                     className="input resize-none"
                                     rows={2}
-                                    placeholder="Optional details…"
+                                    placeholder={t('description')}
                                     value={formData.description}
                                     onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
                                 />
@@ -428,12 +430,12 @@ export default function Tasks() {
 
                             {/* Priority — pill buttons */}
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-2">Priority</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-2">{t('priority')}</label>
                                 <div className="flex gap-2">
                                     {([
-                                        { value: 'high', label: '🔴 High', active: 'bg-rose-500/25 border-rose-500/60 text-rose-300' },
-                                        { value: 'medium', label: '🟡 Medium', active: 'bg-amber-500/25 border-amber-500/60 text-amber-300' },
-                                        { value: 'low', label: '🟢 Low', active: 'bg-emerald-500/25 border-emerald-500/60 text-emerald-300' },
+                                        { value: 'high', label: `🔴 ${t('high')}`, active: 'bg-rose-500/25 border-rose-500/60 text-rose-300' },
+                                        { value: 'medium', label: `🟡 ${t('medium')}`, active: 'bg-amber-500/25 border-amber-500/60 text-amber-300' },
+                                        { value: 'low', label: `🟢 ${t('low')}`, active: 'bg-emerald-500/25 border-emerald-500/60 text-emerald-300' },
                                     ] as const).map(p => (
                                         <button
                                             key={p.value}
@@ -449,15 +451,15 @@ export default function Tasks() {
 
                             {/* Category — grid buttons */}
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-2">Category</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-2">{t('category')}</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {([
-                                        { value: 'work', label: 'Work', Icon: Briefcase },
-                                        { value: 'personal', label: 'Personal', Icon: User2 },
-                                        { value: 'health', label: 'Health', Icon: HeartPulse },
-                                        { value: 'shopping', label: 'Shopping', Icon: ShoppingBag },
-                                        { value: 'studying', label: 'Studying', Icon: BookOpen },
-                                        { value: 'planning', label: 'Planning', Icon: CalendarDays },
+                                        { value: 'work', label: t('work'), Icon: Briefcase },
+                                        { value: 'personal', label: t('personal'), Icon: User2 },
+                                        { value: 'health', label: t('health'), Icon: HeartPulse },
+                                        { value: 'shopping', label: t('shopping'), Icon: ShoppingBag },
+                                        { value: 'studying', label: t('studying'), Icon: BookOpen },
+                                        { value: 'planning', label: t('planning'), Icon: CalendarDays },
                                     ] as const).map(c => {
                                         const isActive = formData.category === c.value;
                                         const color = categoryColors[c.value];
@@ -484,11 +486,11 @@ export default function Tasks() {
                             {formData.category === 'planning' && (
                                 <div className="animate-slide-in">
                                     <label className="text-xs font-medium text-slate-400 flex items-center gap-1.5 mb-2">
-                                        <Link2 className="w-3.5 h-3.5" /> Link to Plan
+                                        <Link2 className="w-3.5 h-3.5" /> {t('linkToPlan')}
                                     </label>
                                     {plans.length === 0 ? (
                                         <p className="text-xs text-slate-500 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10">
-                                            No plans yet — create one in the Plans page first.
+                                            {t('noActivePlans')}
                                         </p>
                                     ) : (
                                         <div className="flex flex-col gap-1.5">
@@ -500,7 +502,7 @@ export default function Tasks() {
                                                     : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/8'
                                                     }`}
                                             >
-                                                None
+                                                {t('none')}
                                             </button>
                                             {(plans as Plan[]).map(plan => (
                                                 <button
@@ -526,27 +528,33 @@ export default function Tasks() {
                             {/* Dates */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Due Date</label>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueDate')}</label>
                                     <input type="date" className="input" value={formData.dueDate} onChange={e => setFormData(f => ({ ...f, dueDate: e.target.value }))} />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Due Time</label>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueTime')}</label>
                                     <input type="time" className="input" value={formData.dueTime} onChange={e => setFormData(f => ({ ...f, dueTime: e.target.value }))} />
                                 </div>
                             </div>
 
                             {/* Recurring */}
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-2">Recurring</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-2">{t('recurring')}</label>
                                 <div className="flex flex-wrap gap-2">
-                                    {(['none', 'daily', 'weekly', 'monthly', 'yearly'] as const).map(r => (
+                                    {([
+                                        { value: 'none', label: t('none') },
+                                        { value: 'daily', label: t('daily') },
+                                        { value: 'weekly', label: t('weekly') },
+                                        { value: 'monthly', label: t('monthly') },
+                                        { value: 'yearly', label: t('yearly') },
+                                    ] as const).map(r => (
                                         <button
-                                            key={r}
+                                            key={r.value}
                                             type="button"
-                                            onClick={() => setFormData(f => ({ ...f, recurring: r }))}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all border ${formData.recurring === r ? 'bg-blue-500/20 border-blue-500/50 text-blue-300' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'}`}
+                                            onClick={() => setFormData(f => ({ ...f, recurring: r.value }))}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all border ${formData.recurring === r.value ? 'bg-blue-500/20 border-blue-500/50 text-blue-300' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'}`}
                                         >
-                                            {r}
+                                            {r.label}
                                         </button>
                                     ))}
                                 </div>
@@ -555,7 +563,7 @@ export default function Tasks() {
                             {/* Actions */}
                             <div className="flex gap-3 pt-1">
                                 <button type="button" onClick={closeForm} className="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-sm font-medium">
-                                    Cancel
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
@@ -568,7 +576,7 @@ export default function Tasks() {
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                                         </svg>
                                     )}
-                                    {submitting ? 'Saving…' : editingTask ? 'Save Changes' : 'Add Task'}
+                                    {submitting ? t('save') : editingTask ? t('save') : t('newTask')}
                                 </button>
                             </div>
                         </form>

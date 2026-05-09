@@ -2,9 +2,10 @@ import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
     BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-    XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend
+    XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 import { useFirestore } from '../contexts/FirestoreContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
     startOfMonth, endOfMonth, startOfWeek, endOfWeek,
     startOfYear, endOfYear, eachDayOfInterval, eachWeekOfInterval,
@@ -33,6 +34,7 @@ const tooltipStyle = {
 
 export default function Analytics() {
     const { tasks, categories } = useFirestore();
+    const { t } = useLanguage();
     const [viewType, setViewType] = useState<ViewType>('month');
     const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -115,8 +117,8 @@ export default function Analytics() {
         <div>
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Analytics</h1>
-                <p className="text-slate-400 text-sm mt-1">Track your task completion trends</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">{t('analytics')}</h1>
+                <p className="text-slate-400 text-sm mt-1">{t('trackYourTrends')}</p>
             </div>
 
             {/* Controls */}
@@ -129,7 +131,7 @@ export default function Analytics() {
                             onClick={() => setViewType(v)}
                             className={`px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-all ${viewType === v ? 'bg-violet-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}
                         >
-                            {v}
+                            {t(v as 'month' | 'week' | 'year')}
                         </button>
                     ))}
                 </div>
@@ -149,13 +151,13 @@ export default function Analytics() {
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-3 mb-6">
                 {[
-                    { label: 'Total', value: stats.total, color: '#6366f1' },
-                    { label: 'Completed', value: stats.completed, color: '#10b981' },
-                    { label: 'Success Rate', value: `${stats.rate}%`, color: '#8b5cf6' },
+                    { labelKey: 'total', value: stats.total, color: '#6366f1' },
+                    { labelKey: 'completed', value: stats.completed, color: '#10b981' },
+                    { labelKey: 'successRate', value: `${stats.rate}%`, color: '#8b5cf6' },
                 ].map(s => (
-                    <div key={s.label} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-center">
+                    <div key={s.labelKey} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-center">
                         <p className="text-xl md:text-2xl font-bold text-white">{s.value}</p>
-                        <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                        <p className="text-xs text-slate-400 mt-1">{t(s.labelKey as 'total' | 'completed' | 'successRate')}</p>
                     </div>
                 ))}
             </div>
@@ -163,7 +165,7 @@ export default function Analytics() {
             {/* Main chart */}
             <div className="rounded-2xl p-5 bg-white/5 border border-white/10 mb-6">
                 <h2 className="text-sm font-semibold text-slate-300 mb-4">
-                    {viewType === 'month' ? 'Daily Completions' : viewType === 'week' ? 'Weekly Trend' : 'Monthly Overview'}
+                    {viewType === 'month' ? t('dailyCompletions') : viewType === 'week' ? t('weeklyTrend') : t('monthlyOverview')}
                 </h2>
                 <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
@@ -176,8 +178,8 @@ export default function Analytics() {
                                     const data = weeklyData.find(d => d.week === label);
                                     return data?.weekFull || label;
                                 }} />
-                                <Line type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2.5} dot={{ fill: '#6366f1', r: 4 }} activeDot={{ r: 6 }} name="Completed" />
-                                <Line type="monotone" dataKey="total" stroke="#a5b4fc" strokeWidth={2} dot={{ fill: '#a5b4fc', r: 3 }} name="Total" />
+                                <Line type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2.5} dot={{ fill: '#6366f1', r: 4 }} activeDot={{ r: 6 }} name={t('completed')} />
+                                <Line type="monotone" dataKey="total" stroke="#a5b4fc" strokeWidth={2} dot={{ fill: '#a5b4fc', r: 3 }} name={t('total')} />
                             </LineChart>
                         ) : (
                             <BarChart data={viewType === 'month' ? monthlyData : yearlyData} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
@@ -185,8 +187,8 @@ export default function Analytics() {
                                 <XAxis dataKey={viewType === 'month' ? 'date' : 'month'} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <YAxis allowDecimals={false} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
-                                <Bar dataKey="completed" name="Completed" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="total" name="Total" fill="rgba(99,102,241,0.25)" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="completed" name={t('completed')} fill="#6366f1" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="total" name={t('total')} fill="rgba(99,102,241,0.25)" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         )}
                     </ResponsiveContainer>
@@ -194,11 +196,11 @@ export default function Analytics() {
                 <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-white/10">
                     <div className="flex items-center gap-2">
                         <div className="w-4 h-1.5 rounded-full bg-violet-500" />
-                        <span className="text-sm text-slate-300 font-medium">Completed</span>
+                        <span className="text-sm text-slate-300 font-medium">{t('completed')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-4 h-1.5 rounded-full bg-indigo-300" />
-                        <span className="text-sm text-slate-300 font-medium">Total</span>
+                        <span className="text-sm text-slate-300 font-medium">{t('total')}</span>
                     </div>
                 </div>
             </div>
@@ -206,7 +208,7 @@ export default function Analytics() {
             {/* Category pie */}
             {categoryData.length > 0 && (
                 <div className="rounded-2xl p-5 bg-white/5 border border-white/10">
-                    <h2 className="text-sm font-semibold text-slate-300 mb-4">Completed by Category</h2>
+                    <h2 className="text-sm font-semibold text-slate-300 mb-4">{t('completedByCategory')}</h2>
                     <div className="flex flex-col sm:flex-row items-center gap-6">
                         <div className="h-48 w-full sm:w-1/2">
                             <ResponsiveContainer width="100%" height="100%">

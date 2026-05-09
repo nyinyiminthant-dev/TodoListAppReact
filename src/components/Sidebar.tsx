@@ -3,17 +3,20 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, CheckSquare, BarChart3, Target, Sparkles,
     Settings, LogOut, ChevronDown, Download, Upload, Trash2, Menu, X,
-    Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, ShoppingBag, CalendarDays, Waves, Sunset
+    Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, ShoppingBag, CalendarDays, Waves, Sunset,
+    Globe
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useTheme, ColorTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { Language } from '../contexts/LanguageContext';
 
 const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
-    { path: '/tasks', icon: CheckSquare, label: 'Tasks', end: false },
-    { path: '/analytics', icon: BarChart3, label: 'Analytics', end: false },
-    { path: '/plans', icon: Target, label: 'Plans', end: false },
+    { path: '/', icon: LayoutDashboard, labelKey: 'dashboard' as const, end: true },
+    { path: '/tasks', icon: CheckSquare, labelKey: 'tasks' as const, end: false },
+    { path: '/analytics', icon: BarChart3, labelKey: 'analytics' as const, end: false },
+    { path: '/plans', icon: Target, labelKey: 'plans' as const, end: false },
 ];
 
 interface SidebarProps {
@@ -25,9 +28,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { user, signOut } = useAuth();
     const { exportData, importData, clearAllData } = useFirestore();
     const { mode, colorTheme, setMode, setColorTheme } = useTheme();
+    const { language, setLanguage, t } = useLanguage();
     const navigate = useNavigate();
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [appearanceOpen, setAppearanceOpen] = useState(false);
+    const [languageOpen, setLanguageOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const colorThemes: { id: ColorTheme; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -155,7 +160,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                         <div className="absolute left-0 inset-y-0 w-1 rounded-r-full bg-gradient-to-b from-violet-400 to-purple-500" />
                                     )}
                                     <item.icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-violet-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                                    <span className="font-medium text-sm">{item.label}</span>
+                                    <span className="font-medium text-sm">{t(item.labelKey)}</span>
                                 </>
                             )}
                         </NavLink>
@@ -169,7 +174,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"
                     >
                         <Palette className="w-5 h-5 shrink-0" />
-                        <span className="font-medium text-sm flex-1 text-left">Appearance</span>
+                        <span className="font-medium text-sm flex-1 text-left">{t('appearance')}</span>
                         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${appearanceOpen ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -190,7 +195,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             >
                                 {/* Mode */}
                                 <div>
-                                    <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 px-1">Mode</p>
+                                    <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 px-1">{t('mode')}</p>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setMode('dark')}
@@ -199,7 +204,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                                 : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                                                 }`}
                                         >
-                                            <Moon className="w-3.5 h-3.5" /> Dark
+                                            <Moon className="w-3.5 h-3.5" /> {t('dark')}
                                         </button>
                                         <button
                                             onClick={() => setMode('light')}
@@ -208,14 +213,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                                 : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                                                 }`}
                                         >
-                                            <Sun className="w-3.5 h-3.5" /> Light
+                                            <Sun className="w-3.5 h-3.5" /> {t('light')}
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* Color theme */}
                                 <div>
-                                    <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 px-1">Color Theme</p>
+                                    <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 px-1">{t('colorTheme')}</p>
                                     <div className="grid grid-cols-3 gap-1.5">
                                         {colorThemes.map(t => (
                                             <button
@@ -243,6 +248,59 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </div>
                 </div>
 
+                {/* Language */}
+                <div className="px-3 py-2 border-t border-white/10">
+                    <button
+                        onClick={() => setLanguageOpen(!languageOpen)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                    >
+                        <Globe className="w-5 h-5 shrink-0" />
+                        <span className="font-medium text-sm flex-1 text-left">{t('language')}</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${languageOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateRows: languageOpen ? '1fr' : '0fr',
+                            transition: 'grid-template-rows 0.3s ease',
+                        }}
+                    >
+                        <div style={{ overflow: 'hidden' }}>
+                            <div
+                                className="mt-2 px-1"
+                                style={{
+                                    opacity: languageOpen ? 1 : 0,
+                                    transition: 'opacity 0.25s ease',
+                                }}
+                            >
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setLanguage('en')}
+                                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all border ${
+                                            language === 'en'
+                                                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
+                                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                                        }`}
+                                    >
+                                        🇬🇧 English
+                                    </button>
+                                    <button
+                                        onClick={() => setLanguage('my')}
+                                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all border ${
+                                            language === 'my'
+                                                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
+                                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                                        }`}
+                                    >
+                                        🇲🇲 မြန်မာ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Settings */}
                 <div className="px-3 py-2 border-t border-white/10">
                     <button
@@ -250,7 +308,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"
                     >
                         <Settings className="w-5 h-5 shrink-0" />
-                        <span className="font-medium text-sm flex-1 text-left">Settings</span>
+                        <span className="font-medium text-sm flex-1 text-left">{t('settings')}</span>
                         <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${settingsOpen ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -273,19 +331,19 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     onClick={handleExport}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
                                 >
-                                    <Download className="w-4 h-4" /> Export Data
+                                    <Download className="w-4 h-4" /> {t('exportData')}
                                 </button>
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
                                 >
-                                    <Upload className="w-4 h-4" /> Import Data
+                                    <Upload className="w-4 h-4" /> {t('importData')}
                                 </button>
                                 <button
                                     onClick={handleClear}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all text-sm"
                                 >
-                                    <Trash2 className="w-4 h-4" /> Clear All Data
+                                    <Trash2 className="w-4 h-4" /> {t('clearAllData')}
                                 </button>
                                 <input
                                     ref={fileInputRef}
@@ -310,7 +368,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                             </div>
                         )}
                         <div className="min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{user?.displayName ?? 'User'}</p>
+                            <p className="text-white text-sm font-medium truncate">{user?.displayName ?? t('user')}</p>
                             <p className="text-slate-400 text-xs truncate">{user?.email ?? ''}</p>
                         </div>
                     </div>
@@ -320,7 +378,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                     >
                         <LogOut className="w-5 h-5 shrink-0" />
-                        <span className="font-medium text-sm">Sign Out</span>
+                        <span className="font-medium text-sm">{t('signOut')}</span>
                     </button>
                 </div>
             </aside>

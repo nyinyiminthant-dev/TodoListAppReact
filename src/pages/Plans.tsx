@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Plus, X, Pencil, Trash2, ChevronDown, ChevronUp, Calendar, CheckCircle2, Sparkles, Loader2, ListChecks } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Plan, PlanStatus } from '../types';
 import { parseISO, differenceInDays, format } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
@@ -90,6 +91,7 @@ const emptyForm = { title: '', description: '', targetDate: getDefaultTargetDate
 
 export default function Plans() {
     const { plans, tasks, addPlan, updatePlan, deletePlan, addTask } = useFirestore();
+    const { t } = useLanguage();
     const [showForm, setShowForm] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -260,7 +262,7 @@ export default function Plans() {
                     userId: '',
                 });
             }
-            setToast({ type: 'success', message: `${aiTaskModal.tasks.length} tasks created and linked to plan!` });
+            setToast({ type: 'success', message: `${aiTaskModal.tasks.length} ${t('tasksReadyToCreate')}` });
             setAiTaskModal(null);
         } catch {
             setToast({ type: 'error', message: 'Failed to create tasks.' });
@@ -287,8 +289,8 @@ export default function Plans() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">Plans</h1>
-                    <p className="text-slate-400 text-sm mt-1">{plans.length} total goals</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">{t('plans')}</h1>
+                    <p className="text-slate-400 text-sm mt-1">{plans.length} {t('totalGoals')}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     <AIPlanAssistant onApply={handleAIApply} />
@@ -297,7 +299,7 @@ export default function Plans() {
                         className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-violet-500/30"
                     >
                         <Plus className="w-4 h-4" />
-                        New Plan
+                        {t('newPlan')}
                     </button>
                 </div>
             </div>
@@ -305,14 +307,14 @@ export default function Plans() {
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                 {[
-                    { label: 'On Track', value: overallStats.on_track, color: '#10b981' },
-                    { label: 'At Risk', value: overallStats.at_risk, color: '#f59e0b' },
-                    { label: 'Completed', value: overallStats.completed, color: '#6366f1' },
-                    { label: 'Overdue', value: overallStats.overdue, color: '#ef4444' },
+                    { labelKey: 'onTrack', value: overallStats.on_track, color: '#10b981' },
+                    { labelKey: 'atRisk', value: overallStats.at_risk, color: '#f59e0b' },
+                    { labelKey: 'completedGroup', value: overallStats.completed, color: '#6366f1' },
+                    { labelKey: 'overdue', value: overallStats.overdue, color: '#ef4444' },
                 ].map(s => (
-                    <div key={s.label} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-center">
+                    <div key={s.labelKey} className="rounded-2xl p-4 bg-white/5 border border-white/10 text-center">
                         <p className="text-2xl font-bold text-white">{s.value}</p>
-                        <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                        <p className="text-xs text-slate-400 mt-1">{t(s.labelKey as 'onTrack' | 'atRisk' | 'completedGroup' | 'overdue')}</p>
                         <div className="mt-2 h-0.5 rounded-full mx-auto w-12" style={{ backgroundColor: s.color }} />
                     </div>
                 ))}
@@ -320,15 +322,24 @@ export default function Plans() {
 
             {/* Quick templates */}
             <div className="mb-6">
-                <p className="text-xs text-slate-400 font-medium mb-2 uppercase tracking-wider">Quick Templates</p>
+                <p className="text-xs text-slate-400 font-medium mb-2 uppercase tracking-wider">{t('quickTemplates')}</p>
                 <div className="flex flex-wrap gap-2">
-                    {templates.map(t => (
+                    {[
+                        { label: t('weeklyGoal'), days: 7, count: 7 },
+                        { label: t('monthlyGoal'), days: 30, count: 20 },
+                        { label: t('dayChallenge'), days: 30, count: 30 },
+                    ].map(tmpl => (
                         <button
-                            key={t.label}
-                            onClick={() => applyTemplate(t)}
+                            key={tmpl.label}
+                            onClick={() => {
+                                const d = new Date();
+                                d.setDate(d.getDate() + tmpl.days);
+                                setFormData(f => ({ ...f, title: tmpl.label, targetDate: d.toISOString().slice(0, 10), targetCount: tmpl.count }));
+                                setShowForm(true);
+                            }}
                             className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm hover:bg-violet-500/20 hover:border-violet-500/40 hover:text-white transition-all"
                         >
-                            {t.label}
+                            {tmpl.label}
                         </button>
                     ))}
                 </div>
@@ -337,8 +348,8 @@ export default function Plans() {
             {/* Plans list */}
             {plansWithStatus.length === 0 ? (
                 <div className="text-center py-20 text-slate-400">
-                    <p className="text-lg font-medium text-white mb-2">No plans yet</p>
-                    <p className="text-sm">Create your first goal to track your progress.</p>
+                    <p className="text-lg font-medium text-white mb-2">{t('noActivePlans')}</p>
+                    <p className="text-sm">{t('setGoalToTrack')}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -394,7 +405,7 @@ export default function Plans() {
                                     {isExpanded && (
                                         <div className="mt-4 pt-4 border-t border-white/10 animate-slide-in">
                                             <div className="flex items-center justify-between mb-2">
-                                                <p className="text-xs text-slate-400 font-medium">Linked Tasks ({linkedTasks.length})</p>
+                                                <p className="text-xs text-slate-400 font-medium">{t('linkedTasks')} ({linkedTasks.length})</p>
                                                 <button
                                                     onClick={() => handleAIGenerateTasks(plan)}
                                                     disabled={generatingTasks}
@@ -405,11 +416,11 @@ export default function Plans() {
                                                     ) : (
                                                         <Sparkles className="w-3.5 h-3.5" />
                                                     )}
-                                                    AI Generate Tasks
+                                                    {t('generateMoreTasks')}
                                                 </button>
                                             </div>
                                             {linkedTasks.length === 0 ? (
-                                                <p className="text-xs text-slate-500">No tasks linked to this plan yet.</p>
+                                                <p className="text-xs text-slate-500">{t('noTasksLinked')}</p>
                                             ) : (
                                                 <div className="space-y-1.5">
                                                     {linkedTasks.map(t => (
@@ -497,7 +508,7 @@ export default function Plans() {
                                     <Sparkles className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-white">AI Generated Tasks</h2>
+                                    <h2 className="text-lg font-semibold text-white">{t('generatedTasks')}</h2>
                                     <p className="text-xs text-slate-400">For: {aiTaskModal.plan.title}</p>
                                 </div>
                             </div>
@@ -517,14 +528,14 @@ export default function Plans() {
                                                 className="input text-sm font-medium"
                                                 value={task.title}
                                                 onChange={e => handleUpdateModalTask(task.id, 'title', e.target.value)}
-                                                placeholder="Task title"
+                                                placeholder={t('title')}
                                             />
                                             <input
                                                 type="text"
                                                 className="input text-xs"
                                                 value={task.description}
                                                 onChange={e => handleUpdateModalTask(task.id, 'description', e.target.value)}
-                                                placeholder="Description (optional)"
+                                                placeholder={t('description')}
                                             />
                                         </div>
                                         <button

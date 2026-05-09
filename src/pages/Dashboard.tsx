@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   CheckCircle2,
   Target,
@@ -18,44 +19,10 @@ import {
 } from 'lucide-react';
 import { format, isToday, isPast, parseISO } from 'date-fns';
 
-const statsCards = [
-  {
-    id: 'total',
-    label: 'Total Tasks',
-    icon: Zap,
-    gradient: 'from-violet-500 to-purple-600',
-    bgGradient: 'bg-gradient-to-br from-violet-500/20 to-purple-600/10',
-    borderColor: 'border-violet-500/30'
-  },
-  {
-    id: 'completed',
-    label: 'Completed',
-    icon: Trophy,
-    gradient: 'from-emerald-500 to-teal-600',
-    bgGradient: 'bg-gradient-to-br from-emerald-500/20 to-teal-600/10',
-    borderColor: 'border-emerald-500/30'
-  },
-  {
-    id: 'pending',
-    label: 'Pending',
-    icon: Clock,
-    gradient: 'from-amber-500 to-orange-600',
-    bgGradient: 'bg-gradient-to-br from-amber-500/20 to-orange-600/10',
-    borderColor: 'border-amber-500/30'
-  },
-  {
-    id: 'overdue',
-    label: 'Overdue',
-    icon: Flame,
-    gradient: 'from-rose-500 to-red-600',
-    bgGradient: 'bg-gradient-to-br from-rose-500/20 to-red-600/10',
-    borderColor: 'border-rose-500/30'
-  }
-];
-
 export default function Dashboard() {
   const { tasks, plans } = useFirestore();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const stats = useMemo(() => {
@@ -118,6 +85,33 @@ export default function Dashboard() {
     return map[id] || 'hover:border-violet-400/50';
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('goodMorning');
+    if (hour < 18) return t('goodAfternoon');
+    return t('goodEvening');
+  };
+
+  const getStatIcon = (id: string) => {
+    switch (id) {
+      case 'total': return Zap;
+      case 'completed': return Trophy;
+      case 'pending': return Clock;
+      case 'overdue': return Flame;
+      default: return Zap;
+    }
+  };
+
+  const getStatBorderColor = (id: string) => {
+    switch (id) {
+      case 'total': return 'border-violet-500/30';
+      case 'completed': return 'border-emerald-500/30';
+      case 'pending': return 'border-amber-500/30';
+      case 'overdue': return 'border-rose-500/30';
+      default: return 'border-violet-500/30';
+    }
+  };
+
   return (
     <div>
       {/* Header */}
@@ -128,57 +122,55 @@ export default function Dashboard() {
           </div>
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">
-              Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}, <span className="gradient-text">{user?.displayName?.split(' ')[0] || 'User'}</span>
+              {getGreeting()}, <span className="gradient-text">{user?.displayName?.split(' ')[0] || t('user')}</span>
             </h1>
           </div>
         </div>
-        <p className="text-slate-400 text-sm md:text-base">Here's what's happening with your tasks today</p>
+        <p className="text-slate-400 text-sm md:text-base">{t('todayOverview')}</p>
       </div>
 
       {/* 4-Column Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8 pb-4">
-        {statsCards.map((stat, index) => {
-          const value = getStatValue(stat.id);
-          const color = getStatColor(stat.id);
+        {['total', 'completed', 'pending', 'overdue'].map((id, index) => {
+          const value = getStatValue(id);
+          const color = getStatColor(id);
+          const Icon = getStatIcon(id);
+          const borderColor = getStatBorderColor(id);
 
           return (
             <div
-              key={stat.id}
+              key={id}
               className={`
                 relative overflow-hidden group rounded-2xl p-4 md:p-6
-                bg-white/5 backdrop-blur-md border ${stat.borderColor}
-                hover:bg-white/10 ${getHoverBorderClass(stat.id)}
+                bg-white/5 backdrop-blur-md border ${borderColor}
+                hover:bg-white/10 ${getHoverBorderClass(id)}
                 transition-all duration-300 cursor-pointer
-                ${index % 2 === 0 ? 'animate-fade-in' : 'animate-fade-in'}
+                animate-fade-in
               `}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              {/* Background gradient glow */}
-              <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity ${stat.bgGradient}`} />
-
               <div className="relative mb-4 flex items-start gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-slate-400">
-                    <div className={`rounded-lg p-2 bg-white/5 border ${stat.borderColor}`}>
-                      <stat.icon size={20} style={{ color }} />
+                    <div className={`rounded-lg p-2 bg-white/5 border ${borderColor}`}>
+                      <Icon size={20} style={{ color }} />
                     </div>
-                    <p className="text-xs md:text-sm text-slate-400">{stat.label}</p>
+                    <p className="text-xs md:text-sm text-slate-400">{t(id as 'totalTasks' | 'completed' | 'pending' | 'overdue')}</p>
                   </div>
                 </div>
               </div>
 
               <div className="relative flex items-baseline gap-2 flex-wrap">
                 <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">{value}</p>
-                {stat.id === 'completed' && stats.completionRate > 0 && (
+                {id === 'completed' && stats.completionRate > 0 && (
                   <span className="text-xs font-medium px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0">
                     +{stats.completionRate}%
                   </span>
                 )}
               </div>
 
-              {/* Decorative gradient orb */}
               <div
-                className={`absolute -bottom-8 -right-8 w-20 h-20 rounded-full opacity-20 blur-2xl`}
+                className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full opacity-20 blur-2xl"
                 style={{ background: `linear-gradient(to bottom right, ${color}, transparent)` }}
               />
             </div>
@@ -195,13 +187,13 @@ export default function Dashboard() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-violet-400" />
               </div>
-              <h2 className="text-lg font-semibold text-white">Today's Tasks</h2>
+              <h2 className="text-lg font-semibold text-white">{t('todaysTasks')}</h2>
             </div>
             <button
               onClick={() => navigate('/tasks')}
               className="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors"
             >
-              View All <ArrowRight className="w-4 h-4" />
+              {t('viewAll')} <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -210,8 +202,8 @@ export default function Dashboard() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
               </div>
-              <p className="text-white font-medium">All caught up!</p>
-              <p className="text-slate-400 text-sm">No tasks due today</p>
+              <p className="text-white font-medium">{t('allCaughtUp')}</p>
+              <p className="text-slate-400 text-sm">{t('noTasksDueToday')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -241,7 +233,7 @@ export default function Dashboard() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
               </div>
-              <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+              <h2 className="text-lg font-semibold text-white">{t('recentActivity')}</h2>
             </div>
           </div>
 
@@ -250,8 +242,8 @@ export default function Dashboard() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-slate-500/20 to-slate-500/10 border border-slate-500/30 flex items-center justify-center">
                 <FileText className="w-8 h-8 text-slate-400" />
               </div>
-              <p className="text-white font-medium">No activity yet</p>
-              <p className="text-slate-400 text-sm">Complete a task to see it here</p>
+              <p className="text-white font-medium">{t('noActivityYet')}</p>
+              <p className="text-slate-400 text-sm">{t('completeTaskToSeeHere')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -266,7 +258,7 @@ export default function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm truncate">{task.title}</p>
                     <p className="text-xs text-slate-400">
-                      {task.completedAt ? format(new Date(task.completedAt), 'MMM d, h:mm a') : 'Completed'}
+                      {task.completedAt ? format(new Date(task.completedAt), 'MMM d, h:mm a') : t('completed')}
                     </p>
                   </div>
                 </div>
@@ -284,13 +276,13 @@ export default function Dashboard() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/10 border border-pink-500/30 flex items-center justify-center">
                 <Target className="w-5 h-5 text-pink-400" />
               </div>
-              <h2 className="text-lg font-semibold text-white">Active Plans</h2>
+              <h2 className="text-lg font-semibold text-white">{t('activePlans')}</h2>
             </div>
             <button
               onClick={() => navigate('/plans')}
               className="text-sm text-pink-400 hover:text-pink-300 flex items-center gap-1 transition-colors"
             >
-              View All <ArrowRight className="w-4 h-4" />
+              {t('viewAll')} <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -299,14 +291,14 @@ export default function Dashboard() {
               <div className="w-20 h-20 mb-4 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 flex items-center justify-center animate-float">
                 <Target className="w-10 h-10 text-violet-400" />
               </div>
-              <p className="text-white font-medium mb-2">No active plans</p>
-              <p className="text-slate-400 text-sm mb-4">Set a goal to track your progress</p>
+              <p className="text-white font-medium mb-2">{t('noActivePlans')}</p>
+              <p className="text-slate-400 text-sm mb-4">{t('setGoalToTrack')}</p>
               <button
                 onClick={() => navigate('/plans?new=true')}
                 className="px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-violet-500/30"
               >
                 <Plus className="w-4 h-4" />
-                Create Plan
+                {t('createPlan')}
               </button>
             </div>
           ) : (
@@ -322,7 +314,7 @@ export default function Dashboard() {
                       plan.status === 'at_risk' ? 'bg-amber-500/20 text-amber-400' :
                         'bg-rose-500/20 text-rose-400'
                       }`}>
-                      {plan.status.replace('_', ' ')}
+                      {t(plan.status === 'on_track' ? 'onTrack' : plan.status === 'at_risk' ? 'atRisk' : 'atRisk')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
