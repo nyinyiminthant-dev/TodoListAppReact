@@ -36,31 +36,49 @@ export interface GeneratedTask {
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAuVZyKrgtbojlP7atrvf7N8IcKLxbvqMM';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
 
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 export async function generatePlanRecommendation(
   goal: string,
   availableHoursPerWeek = 10,
   preferredFrequency = 'daily'
 ): Promise<PlanRecommendation> {
   const today = new Date();
+  const todayStr = formatDateLocal(today);
+  
+  let defaultDays = 30;
+  if (preferredFrequency === 'weekly') defaultDays = 84;
+  else if (preferredFrequency === 'monthly') defaultDays = 90;
+
   const prompt = `You are a productivity planning assistant. Based on the user's goal and available time, recommend optimal plan settings.
 
 Goal: "${goal}"
 Available hours per week: ${availableHoursPerWeek}
 Preferred frequency: ${preferredFrequency}
 
-Today's date: ${today.toISOString().split('T')[0]}
+Today's date: ${todayStr}
 
 Respond ONLY with valid JSON in this exact format, no markdown or explanation:
 {
-  "targetDate": "YYYY-MM-DD",
-  "targetCount": number,
+  "targetCount": number (how many times user should complete this goal, be realistic),
   "suggestedFrequency": "daily|weekly|monthly",
   "reasoning": "brief explanation (max 100 chars)"
 }
 
 Rules:
-- targetDate must be 1-12 weeks from today (${today.toISOString().split('T')[0]})
-- targetCount should be achievable given available hours`;
+- targetCount should be achievable given available hours
+- Consider the complexity of the goal when setting targets`;
 
   const response = await fetch(GEMINI_API_URL, {
     method: 'POST',
@@ -85,12 +103,30 @@ Rules:
 
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
+    let result: { targetCount?: number; suggestedFrequency?: string; reasoning?: string };
+    
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      result = JSON.parse(jsonMatch[0]);
+    } else {
+      result = JSON.parse(text);
     }
-    return JSON.parse(text);
+
+    const targetDate = formatDateLocal(addDays(today, defaultDays));
+    
+    return {
+      targetDate,
+      targetCount: result.targetCount || Math.ceil(defaultDays / 3),
+      suggestedFrequency: result.suggestedFrequency || preferredFrequency,
+      reasoning: result.reasoning || 'Based on your available time and goals',
+    };
   } catch {
-    throw new Error('Failed to parse AI response');
+    const targetDate = formatDateLocal(addDays(today, defaultDays));
+    return {
+      targetDate,
+      targetCount: Math.ceil(defaultDays / 3),
+      suggestedFrequency: preferredFrequency,
+      reasoning: 'Default recommendation based on your settings',
+    };
   }
 }
 
@@ -102,15 +138,16 @@ export async function generateTasksFromPlan(
   frequency: string = 'daily'
 ): Promise<GeneratedTask[]> {
   const today = new Date();
+  const todayStr = formatDateLocal(today);
   const endDate = new Date(targetDate);
-  const totalDays = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const totalDays = Math.max(1, Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
 
   let tasksPerWeek = 1;
   if (frequency === 'daily') tasksPerWeek = 7;
   else if (frequency === 'weekly') tasksPerWeek = 1;
   else if (frequency === 'monthly') tasksPerWeek = 0.25;
 
-  const estimatedTotalTasks = Math.min(targetCount, Math.ceil(totalDays * tasksPerWeek / 7));
+  const estimatedTotalTasks = Math.min(targetCount, Math.max(5, Math.ceil(totalDays * tasksPerWeek / 7)));
 
   const prompt = `You are a task breakdown assistant. Break down a plan into specific, actionable tasks.
 
@@ -119,7 +156,7 @@ Plan Description: "${planDescription}"
 Target: ${targetCount} completions
 Target Date: ${targetDate}
 Frequency: ${frequency}
-Today's Date: ${today.toISOString().split('T')[0]}
+Today's Date: ${todayStr}
 Days until deadline: ${totalDays}
 
 Respond ONLY with valid JSON array in this exact format, no markdown or explanation:
@@ -128,21 +165,20 @@ Respond ONLY with valid JSON array in this exact format, no markdown or explanat
     "title": "specific action item (max 60 chars)",
     "description": "brief detail about this task (max 100 chars)",
     "priority": "high|medium|low",
-    "dueDate": "YYYY-MM-DD (within the deadline)",
-    "dueTime": "HH:MM (optional, e.g. 09:00 or leave empty string)",
+    "dueDate": "YYYY-MM-DD",
+    "dueTime": "HH:MM or empty string",
     "category": "work|personal|health|shopping|studying|planning"
   }
 ]
 
 Rules:
-- Generate ${Math.min(estimatedTotalTasks, 20)} diverse, specific tasks
-- Distribute tasks evenly across the timeline from today to ${targetDate}
-- Tasks should be actionable and specific
-- First task should be today or tomorrow
+- Generate exactly ${estimatedTotalTasks} diverse, specific tasks
+- First task must be today (${todayStr}) or tomorrow (${formatDateLocal(addDays(today, 1))})
+- All dueDate values must be between ${todayStr} and ${targetDate} (inclusive)
+- Distribute tasks evenly across the timeline
 - Mix priorities realistically (more medium/low than high)
-- Include relevant category based on the goal
-- dueTime can be empty string if not specified
-- Use today's date: ${today.toISOString().split('T')[0]}`;
+- dueTime should be empty string (not "00:00")
+- Include relevant category based on the goal`;
 
   const response = await fetch(GEMINI_API_URL, {
     method: 'POST',
@@ -167,11 +203,48 @@ Rules:
 
   try {
     const jsonMatch = text.match(/\[[\s\S]*\]/);
+    let tasks: GeneratedTask[];
+    
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+      tasks = JSON.parse(jsonMatch[0]);
+    } else {
+      tasks = JSON.parse(text);
     }
-    return JSON.parse(text);
+
+    return tasks.map(task => {
+      let dueDate = task.dueDate;
+      const taskDate = new Date(dueDate);
+      
+      if (taskDate < today) {
+        dueDate = todayStr;
+      } else if (taskDate > endDate) {
+        dueDate = targetDate;
+      }
+      
+      return {
+        ...task,
+        dueDate,
+        dueTime: task.dueTime === '00:00' ? '' : (task.dueTime || ''),
+      };
+    });
   } catch {
-    throw new Error('Failed to parse AI response');
+    const fallbackTasks: GeneratedTask[] = [];
+    const interval = Math.max(1, Math.floor(totalDays / estimatedTotalTasks));
+    
+    for (let i = 0; i < estimatedTotalTasks; i++) {
+      const date = addDays(today, i * interval);
+      if (date <= endDate) {
+        fallbackTasks.push({
+          title: `${planTitle} - Step ${i + 1}`,
+          description: `Part ${i + 1} of your ${planTitle} plan`,
+          priority: i === 0 ? 'high' : 'medium',
+          dueDate: formatDateLocal(date),
+          dueTime: '',
+          category: 'planning',
+        });
+      }
+    }
+    
+    return fallbackTasks;
   }
 }
