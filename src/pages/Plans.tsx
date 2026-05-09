@@ -110,12 +110,13 @@ export default function Plans() {
 
     const closeToast = useCallback(() => setToast(null), []);
 
-    // Auto-sync completedCount from linked tasks
+    // Auto-sync completedCount and status from linked tasks
     useEffect(() => {
         plans.forEach(plan => {
             const linked = tasks.filter(t => t.planId === plan.id && t.status === 'completed').length;
-            if (linked !== plan.completedCount) {
-                updatePlan(plan.id, { completedCount: linked });
+            if (linked !== plan.completedCount || plan.completedCount >= plan.targetCount) {
+                const newStatus = calculatePlanStatus({ ...plan, completedCount: linked });
+                updatePlan(plan.id, { completedCount: linked, status: newStatus });
             }
         });
     }, [tasks, plans, updatePlan]);
@@ -173,7 +174,8 @@ export default function Plans() {
 
         try {
             if (editingPlan) {
-                await updatePlan(editingPlan.id, formData);
+                const newStatus = calculatePlanStatus({ ...editingPlan, ...formData });
+                await updatePlan(editingPlan.id, { ...formData, status: newStatus });
             } else {
                 await addPlan({ ...formData, linkedTaskIds: [], status: 'on_track', userId: '' });
             }

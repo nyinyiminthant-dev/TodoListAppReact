@@ -51,7 +51,7 @@ export default function Dashboard() {
   }, [tasks]);
 
   const activePlans = useMemo(() => {
-    return plans.filter(p => p.status !== 'completed').slice(0, 2);
+    return plans.filter(p => p.status !== 'failed').slice(0, 2);
   }, [plans]);
 
   const getStatValue = (id: string) => {
@@ -310,11 +310,18 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-white font-medium truncate">{plan.title}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${plan.status === 'on_track' ? 'bg-emerald-500/20 text-emerald-400' :
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      plan.status === 'on_track' ? 'bg-emerald-500/20 text-emerald-400' :
                       plan.status === 'at_risk' ? 'bg-amber-500/20 text-amber-400' :
-                        'bg-rose-500/20 text-rose-400'
-                      }`}>
-                      {t(plan.status === 'on_track' ? 'onTrack' : plan.status === 'at_risk' ? 'atRisk' : 'atRisk')}
+                      plan.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                      plan.status === 'overdue' ? 'bg-rose-500/20 text-rose-400' :
+                      'bg-rose-500/20 text-rose-400'
+                    }`}>
+                      {plan.status === 'on_track' ? t('onTrack') :
+                       plan.status === 'at_risk' ? t('atRisk') :
+                       plan.status === 'completed' ? t('completedGroup') :
+                       plan.status === 'overdue' ? t('overdue') :
+                       t('failed')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

@@ -68,7 +68,7 @@ function groupTasks(tasks: Task[]) {
 }
 
 export default function Tasks() {
-    const { tasks, plans, addTask, updateTask, deleteTask } = useFirestore();
+    const { tasks, plans, addTask, updateTask, deleteTask, updatePlan } = useFirestore();
     const { t } = useLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
     useNotifications();
@@ -165,6 +165,14 @@ export default function Tasks() {
             status: next,
             completedAt: next === 'completed' ? new Date().toISOString() : null,
         });
+
+        if (task.planId) {
+            const plan = plans.find(p => p.id === task.planId);
+            if (plan) {
+                const newCount = next === 'completed' ? plan.completedCount + 1 : Math.max(0, plan.completedCount - 1);
+                await updatePlan(task.planId, { completedCount: newCount });
+            }
+        }
     };
 
     const handleDeleteConfirm = async () => {
