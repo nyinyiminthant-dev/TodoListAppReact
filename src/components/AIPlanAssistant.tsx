@@ -3,6 +3,7 @@ import { Sparkles, X, Loader2, Calendar, Hash, Zap, ListChecks, Trash2, CheckCir
 import { generatePlanRecommendation, generateTasksFromPlan, GeneratedTask } from '../services/aiService';
 import { format } from 'date-fns';
 import { useFirestore } from '../contexts/FirestoreContext';
+import CustomSelect from './CustomSelect';
 
 interface AIPlanAssistantProps {
   onApply: (data: { title: string; targetDate: string; targetCount: number; suggestedFrequency: string }) => void;
@@ -236,26 +237,16 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                         placeholder="10"
                       />
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-slate-400 block mb-1.5">Frequency</label>
-                      <div className="relative">
-                        <select
-                          className="input pr-8 cursor-pointer"
-                          style={{ background: 'rgba(255, 255, 255, 0.06)' }}
-                          value={frequency}
-                          onChange={e => setFrequency(e.target.value)}
-                        >
-                          <option value="daily">Daily</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="monthly">Monthly</option>
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="6 9 12 15 18 9" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+                    <CustomSelect
+                      label="Frequency"
+                      value={frequency}
+                      onChange={setFrequency}
+                      options={[
+                        { value: 'daily', label: 'Daily' },
+                        { value: 'weekly', label: 'Weekly' },
+                        { value: 'monthly', label: 'Monthly' },
+                      ]}
+                    />
                   </div>
 
                   <div>
@@ -404,16 +395,11 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                           </div>
                           <div>
                             <label className="text-xs text-slate-500 block mb-1">Priority</label>
-                            <select
-                              className="input text-xs cursor-pointer"
-                              style={{ background: 'rgba(255, 255, 255, 0.06)' }}
+                            <CustomSelect
                               value={task.priority}
-                              onChange={e => handleUpdateTask(task.id, 'priority', e.target.value)}
-                            >
-                              {priorityOptions.map(p => (
-                                <option key={p.value} value={p.value}>{p.label}</option>
-                              ))}
-                            </select>
+                              onChange={(val) => handleUpdateTask(task.id, 'priority', val)}
+                              options={priorityOptions}
+                            />
                           </div>
                         </div>
                       </div>

@@ -6,7 +6,8 @@ import { parseISO, differenceInDays, format } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import AIPlanAssistant from '../components/AIPlanAssistant';
-import { generateTasksFromPlan, GeneratedTask } from '../services/aiService';
+import CustomSelect from '../components/CustomSelect';
+import { generateTasksFromPlan, GeneratedTask, } from '../services/aiService';
 
 // Firestore returns serverTimestamp fields as Timestamp objects, not strings.
 // This helper converts either format to a JS Date safely.
@@ -556,16 +557,16 @@ export default function Plans() {
                                         </div>
                                         <div>
                                             <label className="text-xs text-slate-500 block mb-1">Priority</label>
-                                            <select
-                                                className="input text-xs cursor-pointer"
-                                                style={{ background: 'rgba(255, 255, 255, 0.06)' }}
+                                            <CustomSelect
                                                 value={task.priority}
-                                                onChange={e => handleUpdateModalTask(task.id, 'priority', e.target.value)}
-                                            >
-                                                <option value="high">High</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="low">Low</option>
-                                            </select>
+                                                onChange={(val) => handleUpdateModalTask(task.id, 'priority', val)}
+                                                options={[
+                                                    { value: 'high', label: 'High' },
+                                                    { value: 'medium', label: 'Medium' },
+                                                    { value: 'low', label: 'Low' },
+                                                ]}
+                                                size="sm"
+                                            />
                                         </div>
                                     </div>
                                 </div>
