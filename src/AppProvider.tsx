@@ -11,8 +11,8 @@ import { LayoutDashboard, CheckSquare, BarChart3, Target } from 'lucide-react';
 const mobileNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Home' },
   { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
-  { path: '/analytics', icon: BarChart3, label: 'Stats' },
   { path: '/plans', icon: Target, label: 'Plans' },
+  { path: '/analytics', icon: BarChart3, label: 'Stats' },
 ];
 
 interface AppProviderProps { children: ReactNode; }
