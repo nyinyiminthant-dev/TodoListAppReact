@@ -83,7 +83,7 @@ export default function Analytics() {
             const weekEnd = endOfWeek(weekStart);
             const weekTasks = tasks.filter(t => t.dueDate && isWithinInterval(parseISO(t.dueDate), { start: weekStart, end: weekEnd }));
             return {
-                week: `${format(weekStart, 'M/d')}-${format(weekEnd, 'M/d')}`,
+                week: `${format(weekStart, 'MMM d')}`,
                 weekFull: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
                 completed: weekTasks.filter(t => t.status === 'completed').length,
                 total: weekTasks.length,
@@ -170,7 +170,7 @@ export default function Analytics() {
                         {viewType === 'week' ? (
                             <LineChart data={weeklyData} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                                <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} interval={0} angle={-45} dy={15} />
+                                <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} interval={0} dy={5} />
                                 <YAxis allowDecimals={false} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} labelFormatter={(label) => {
                                     const data = weeklyData.find(d => d.week === label);
