@@ -206,7 +206,7 @@ export const translations = {
     tryAdjustingFilters: 'စစ်ထုတ်မှုများပြောင်းလဲပါ သို့မဟုတ် အလုပ်အသစ်ဖန်တီးပါ',
     title: 'ခေါင်းစဉ်',
     description: 'ဖော်ပြချက်',
-    priority: 'ဦးစား',
+    priority: 'ဦးစားပေး',
     category: 'အမျိုးအစား',
     dueDate: 'ပြီးဆုံးရမည့်နေ့',
     dueTime: 'အချိန်',
