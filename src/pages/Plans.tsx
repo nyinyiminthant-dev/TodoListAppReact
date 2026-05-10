@@ -106,6 +106,15 @@ export default function Plans() {
     const [generatingTasks, setGeneratingTasks] = useState(false);
     const [creatingTasks, setCreatingTasks] = useState(false);
     const [tasksModal, setTasksModal] = useState<Plan | null>(null);
+    const [tasksModalClosing, setTasksModalClosing] = useState(false);
+
+    const closeTasksModal = () => {
+        setTasksModalClosing(true);
+        setTimeout(() => {
+            setTasksModal(null);
+            setTasksModalClosing(false);
+        }, 200);
+    };
 
     interface EditableTask extends GeneratedTask {
         id: string;
@@ -159,6 +168,7 @@ export default function Plans() {
             description: '',
             targetDate: data.targetDate,
             targetCount: data.targetCount,
+            startDate: '',
         });
         setShowForm(true);
     };
@@ -493,41 +503,41 @@ export default function Plans() {
                             <div>
                                 <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('targetCount')}</label>
                                 <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormData(f => ({ ...f, targetCount: Math.max(1, f.targetCount - 1) }))}
-                                            className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-lg font-bold flex items-center justify-center"
-                                        >
-                                            -
-                                        </button>
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            pattern="[0-9]*"
-                                            className="input text-center w-20"
-                                            value={formData.targetCount}
-                                            onChange={e => {
-                                                const val = e.target.value.replace(/[^0-9]/g, '');
-                                                if (val === '') {
-                                                    setFormData(f => ({ ...f, targetCount: 1 }));
-                                                } else {
-                                                    setFormData(f => ({ ...f, targetCount: parseInt(val, 10) || 1 }));
-                                                }
-                                            }}
-                                            onBlur={e => {
-                                                if (!e.target.value || parseInt(e.target.value, 10) < 1) {
-                                                    setFormData(f => ({ ...f, targetCount: 1 }));
-                                                }
-                                            }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormData(f => ({ ...f, targetCount: f.targetCount + 1 }))}
-                                            className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-lg font-bold flex items-center justify-center"
-                                        >
-                                            +
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(f => ({ ...f, targetCount: Math.max(1, f.targetCount - 1) }))}
+                                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-lg font-bold flex items-center justify-center"
+                                    >
+                                        -
+                                    </button>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        className="input text-center w-20"
+                                        value={formData.targetCount}
+                                        onChange={e => {
+                                            const val = e.target.value.replace(/[^0-9]/g, '');
+                                            if (val === '') {
+                                                setFormData(f => ({ ...f, targetCount: 1 }));
+                                            } else {
+                                                setFormData(f => ({ ...f, targetCount: parseInt(val, 10) || 1 }));
+                                            }
+                                        }}
+                                        onBlur={e => {
+                                            if (!e.target.value || parseInt(e.target.value, 10) < 1) {
+                                                setFormData(f => ({ ...f, targetCount: 1 }));
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(f => ({ ...f, targetCount: f.targetCount + 1 }))}
+                                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all text-lg font-bold flex items-center justify-center"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="flex gap-3 pt-2">
@@ -676,21 +686,21 @@ export default function Plans() {
             {/* Tasks Modal */}
             {tasksModal && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
-                    onClick={e => e.target === e.currentTarget && setTasksModal(null)}
+                    className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+                    onClick={e => e.target === e.currentTarget && closeTasksModal()}
                 >
-                    <div className="w-full max-w-2xl rounded-3xl bg-slate-900 border border-white/10 shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden flex flex-col">
+                    <div className={`w-full max-w-2xl rounded-3xl bg-slate-900 border border-white/10 shadow-2xl ${isClosing ? 'animate-scale-out' : 'animate-scale-in'} max-h-[90vh] overflow-hidden flex flex-col`}>
                         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 shrink-0">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
                                     <ListChecks className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-white">{t('linkedTasks')}</h2>
-                                    <p className="text-xs text-slate-400">{tasksModal.title}</p>
+                                    <h2 className="text-lg font-semibold text-white">{tasksModal.title}</h2>
+                                    <p className="text-xs text-slate-400">{t('linkedTasks')}</p>
                                 </div>
                             </div>
-                            <button onClick={() => setTasksModal(null)} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+                            <button onClick={closeTasksModal} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -700,8 +710,8 @@ export default function Plans() {
                                 <p className="text-sm text-slate-500 text-center py-8">{t('noTasksLinked')}</p>
                             ) : (
                                 tasks.filter(t => t.planId === tasksModal.id).map(task => (
-                                    <div 
-                                        key={task.id} 
+                                    <div
+                                        key={task.id}
                                         onClick={() => {
                                             setTasksModal(null);
                                             navigate(`/tasks?task=${task.id}`);
@@ -718,11 +728,10 @@ export default function Plans() {
                                                 </p>
                                             )}
                                         </div>
-                                        <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                                            task.priority === 'high' ? 'bg-rose-500/20 text-rose-400' :
-                                            task.priority === 'medium' ? 'bg-amber-500/20 text-amber-400' :
-                                            'bg-emerald-500/20 text-emerald-400'
-                                        }`}>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${task.priority === 'high' ? 'bg-rose-500/20 text-rose-400' :
+                                                task.priority === 'medium' ? 'bg-amber-500/20 text-amber-400' :
+                                                    'bg-emerald-500/20 text-emerald-400'
+                                            }`}>
                                             {task.priority}
                                         </span>
                                     </div>
