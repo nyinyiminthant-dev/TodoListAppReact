@@ -173,7 +173,7 @@ export const translations = {
     goodMorning: 'မင်္ဂလာနံနက်ခင်းပါ',
     goodAfternoon: 'မင်္ဂလာနေ့လည်ခင်းပါ',
     goodEvening: 'မင်္ဂလာညနေခင်းပါ',
-    todayOverview: 'ဒီနေ့သင်ဘာတွေလုပ်ဖို့ စိတ်ကူးထားလဲ',
+    todayOverview: 'ဒီနေ့ဘာတွေလုပ်ဖို့ စိတ်ကူးထားလဲ',
     totalTasks: 'စုစုပေါင်းအလုပ်များ',
     completed: 'ပြီးပါပြီ',
     pending: 'စောင့်ဆိုင်း',
