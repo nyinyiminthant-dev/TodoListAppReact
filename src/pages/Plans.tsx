@@ -87,7 +87,7 @@ const getDefaultTargetDate = () => {
     return d.toISOString().split('T')[0];
 };
 
-const emptyForm = { title: '', description: '', targetDate: getDefaultTargetDate(), targetCount: 10 };
+const emptyForm = { title: '', description: '', startDate: '', targetDate: getDefaultTargetDate(), targetCount: 10 };
 
 export default function Plans() {
     const { plans, tasks, addPlan, updatePlan, deletePlan, addTask } = useFirestore();
@@ -106,6 +106,7 @@ export default function Plans() {
 
     interface EditableTask extends GeneratedTask {
         id: string;
+        startDate: string;
     }
 
     const closeToast = useCallback(() => setToast(null), []);
@@ -161,7 +162,7 @@ export default function Plans() {
 
     const handleEdit = (plan: Plan) => {
         setEditingPlan(plan);
-        setFormData({ title: plan.title, description: plan.description, targetDate: plan.targetDate, targetCount: plan.targetCount });
+        setFormData({ title: plan.title, description: plan.description, startDate: plan.startDate || '', targetDate: plan.targetDate, targetCount: plan.targetCount });
         setShowForm(true);
     };
 
@@ -191,7 +192,7 @@ export default function Plans() {
     const applyTemplate = (t: typeof templates[number]) => {
         const d = new Date();
         d.setDate(d.getDate() + t.days);
-        setFormData(f => ({ ...f, title: t.label, targetDate: d.toISOString().slice(0, 10), targetCount: t.count }));
+        setFormData(f => ({ ...f, title: t.label, startDate: '', targetDate: d.toISOString().slice(0, 10), targetCount: t.count }));
         setShowForm(true);
     };
 
@@ -220,6 +221,7 @@ export default function Plans() {
             const editableTasks: EditableTask[] = generated.map((t, i) => ({
                 ...t,
                 id: `task-${i}-${Date.now()}`,
+                startDate: t.startDate || '',
             }));
             setAiTaskModal({ plan, tasks: editableTasks });
         } catch {
@@ -258,7 +260,7 @@ export default function Plans() {
                     status: 'pending',
                     dueDate: task.dueDate,
                     dueTime: task.dueTime || '',
-                    startDate: null,
+                    startDate: task.startDate || null,
                     recurring: 'none',
                     planId: aiTaskModal.plan.id,
                     userId: '',
@@ -467,12 +469,17 @@ export default function Plans() {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Start Date</label>
+                                    <input type="date" className="input" value={formData.startDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))} />
+                                </div>
+                                <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Date *</label>
                                     <input type="date" className="input" value={formData.targetDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData(f => ({ ...f, targetDate: e.target.value }))} required />
                                 </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Count</label>
-                                    <div className="flex items-center gap-2">
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Count</label>
+                                <div className="flex items-center gap-2">
                                         <button
                                             type="button"
                                             onClick={() => setFormData(f => ({ ...f, targetCount: Math.max(1, f.targetCount - 1) }))}
@@ -508,7 +515,6 @@ export default function Plans() {
                                             +
                                         </button>
                                     </div>
-                                </div>
                             </div>
 
                             <div className="flex gap-3 pt-2">
@@ -567,9 +573,9 @@ export default function Plans() {
                                                 onChange={e => handleUpdateModalTask(task.id, 'title', e.target.value)}
                                                 placeholder={t('title')}
                                             />
-                                            <input
-                                                type="text"
-                                                className="input text-xs"
+                                            <textarea
+                                                className="input text-xs resize-none"
+                                                rows={2}
                                                 value={task.description}
                                                 onChange={e => handleUpdateModalTask(task.id, 'description', e.target.value)}
                                                 placeholder={t('description')}
@@ -583,7 +589,17 @@ export default function Plans() {
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-3 gap-2 ml-8">
+                                    <div className="grid grid-cols-4 gap-2 ml-8">
+                                        <div>
+                                            <label className="text-xs text-slate-500 block mb-1">Start Date</label>
+                                            <input
+                                                type="date"
+                                                className="input text-xs"
+                                                value={task.startDate}
+                                                onChange={e => handleUpdateModalTask(task.id, 'startDate', e.target.value)}
+                                                min={new Date().toISOString().split('T')[0]}
+                                            />
+                                        </div>
                                         <div>
                                             <label className="text-xs text-slate-500 block mb-1">Due Date</label>
                                             <input

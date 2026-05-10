@@ -34,6 +34,7 @@ export interface PlanRequest {
 export interface GeneratedTask {
   title: string;
   description: string;
+  startDate: string;
   priority: 'high' | 'medium' | 'low';
   dueDate: string;
   dueTime: string;
@@ -157,6 +158,7 @@ Respond ONLY with valid JSON array in this exact format, no markdown or explanat
   {
     "title": "specific action item (max 60 chars)",
     "description": "brief detail about this task (max 100 chars)",
+    "startDate": "YYYY-MM-DD",
     "priority": "high|medium|low",
     "dueDate": "YYYY-MM-DD",
     "dueTime": "HH:MM or empty string",
@@ -167,7 +169,7 @@ Respond ONLY with valid JSON array in this exact format, no markdown or explanat
 Rules:
 - Generate exactly ${estimatedTotalTasks} diverse, specific tasks
 - First task must be today (${todayStr}) or tomorrow (${formatDateLocal(addDays(today, 1))})
-- All dueDate values must be between ${todayStr} and ${targetDate} (inclusive)
+- All startDate and dueDate values must be between ${todayStr} and ${targetDate} (inclusive)
 - Distribute tasks evenly across the timeline
 - Mix priorities realistically (more medium/low than high)
 - dueTime should be empty string (not "00:00")
@@ -208,7 +210,9 @@ Rules:
 
     return tasks.map(task => {
       let dueDate = task.dueDate;
+      let startDate = task.startDate || dueDate;
       const taskDate = new Date(dueDate);
+      const startTaskDate = new Date(startDate);
       
       if (taskDate < today) {
         dueDate = todayStr;
@@ -216,8 +220,15 @@ Rules:
         dueDate = targetDate;
       }
       
+      if (startTaskDate < today) {
+        startDate = todayStr;
+      } else if (startTaskDate > endDate) {
+        startDate = targetDate;
+      }
+      
       return {
         ...task,
+        startDate,
         dueDate,
         dueTime: task.dueTime === '00:00' ? '' : (task.dueTime || ''),
       };
@@ -232,6 +243,7 @@ Rules:
         fallbackTasks.push({
           title: `${planTitle} - Step ${i + 1}`,
           description: `Part ${i + 1} of your ${planTitle} plan`,
+          startDate: formatDateLocal(date),
           priority: i === 0 ? 'high' : 'medium',
           dueDate: formatDateLocal(date),
           dueTime: '',

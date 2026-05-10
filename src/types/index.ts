@@ -25,6 +25,7 @@ export interface Plan {
   id: string;
   title: string;
   description: string;
+  startDate: string;
   targetDate: string;
   targetCount: number;
   completedCount: number;

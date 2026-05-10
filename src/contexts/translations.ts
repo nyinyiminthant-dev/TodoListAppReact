@@ -225,6 +225,7 @@ export const translations = {
     completed1: 'ပြီးပါပြီ',
     failed: 'မအောင်မြင်',
     quickTemplates: 'အမြန်ဖန်တီး',
+
     weeklyGoal: 'အပတ်စဉ်ပန်းတိုင်',
     monthlyGoal: 'လစဉ်ပန်းတိုင်',
     dayChallenge: '၃၀ ရက် Challenge',

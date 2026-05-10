@@ -12,6 +12,7 @@ interface AIPlanAssistantProps {
 interface EditableTask extends GeneratedTask {
   id: string;
   completed: boolean;
+  startDate: string;
 }
 
 export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
@@ -70,6 +71,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
         ...t,
         id: `task-${i}-${Date.now()}`,
         completed: false,
+        startDate: t.startDate || '',
       }));
 
       setGeneratedTasks(editableTasks);
@@ -81,7 +83,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
     }
   };
 
-  const handleUpdateTask = (id: string, field: keyof GeneratedTask, value: string) => {
+  const handleUpdateTask = (id: string, field: keyof GeneratedTask | 'startDate', value: string) => {
     setGeneratedTasks(tasks =>
       tasks.map(t => t.id === id ? { ...t, [field]: value } : t)
     );
@@ -107,7 +109,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
           status: 'pending',
           dueDate: task.dueDate,
           dueTime: task.dueTime || '',
-          startDate: null,
+          startDate: task.startDate || null,
           recurring: 'none',
           planId: null,
           userId: '',
@@ -363,9 +365,9 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                               onChange={e => handleUpdateTask(task.id, 'title', e.target.value)}
                               placeholder="Task title"
                             />
-                            <input
-                              type="text"
-                              className="input text-xs"
+                            <textarea
+                              className="input text-xs resize-none"
+                              rows={2}
                               value={task.description}
                               onChange={e => handleUpdateTask(task.id, 'description', e.target.value)}
                               placeholder="Description (optional)"
@@ -379,7 +381,17 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 ml-8">
+                        <div className="grid grid-cols-4 gap-2 ml-8">
+                          <div>
+                            <label className="text-xs text-slate-500 block mb-1">Start Date</label>
+                            <input
+                              type="date"
+                              className="input text-xs"
+                              value={task.startDate}
+                              onChange={e => handleUpdateTask(task.id, 'startDate', e.target.value)}
+                              min={new Date().toISOString().split('T')[0]}
+                            />
+                          </div>
                           <div>
                             <label className="text-xs text-slate-500 block mb-1">Due Date</label>
                             <input
