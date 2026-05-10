@@ -41,27 +41,35 @@ const emptyForm = {
     planId: null as string | null,
 };
 
-function groupTasks(tasks: Task[]) {
+function groupTasks(tasks: Task[], t: (key: string) => string) {
     const now = new Date();
     const groups: Record<string, Task[]> = {
-        Overdue: [],
-        Today: [],
-        Tomorrow: [],
-        'This Week': [],
-        Later: [],
-        'No Due Date': [],
-        Completed: [],
+        [t('overdue')]: [],
+        [t('today')]: [],
+        [t('tomorrow')]: [],
+        [t('thisWeek')]: [],
+        [t('later')]: [],
+        [t('noDueDate')]: [],
+        [t('completed')]: [],
     };
 
-    for (const t of tasks) {
-        if (t.status === 'completed') { groups['Completed'].push(t); continue; }
-        if (!t.dueDate) { groups['No Due Date'].push(t); continue; }
-        const d = parseISO(t.dueDate);
-        if (isPast(d) && !isToday(d)) { groups['Overdue'].push(t); continue; }
-        if (isToday(d)) { groups['Today'].push(t); continue; }
-        if (isTomorrow(d)) { groups['Tomorrow'].push(t); continue; }
-        if (isWithinInterval(d, { start: now, end: addDays(now, 7) })) { groups['This Week'].push(t); continue; }
-        groups['Later'].push(t);
+    const overdueKey = t('overdue');
+    const todayKey = t('today');
+    const tomorrowKey = t('tomorrow');
+    const thisWeekKey = t('thisWeek');
+    const laterKey = t('later');
+    const noDueDateKey = t('noDueDate');
+    const completedKey = t('completed');
+
+    for (const task of tasks) {
+        if (task.status === 'completed') { groups[completedKey].push(task); continue; }
+        if (!task.dueDate) { groups[noDueDateKey].push(task); continue; }
+        const d = parseISO(task.dueDate);
+        if (isPast(d) && !isToday(d)) { groups[overdueKey].push(task); continue; }
+        if (isToday(d)) { groups[todayKey].push(task); continue; }
+        if (isTomorrow(d)) { groups[tomorrowKey].push(task); continue; }
+        if (isWithinInterval(d, { start: now, end: addDays(now, 7) })) { groups[thisWeekKey].push(task); continue; }
+        groups[laterKey].push(task);
     }
 
     return groups;
@@ -218,9 +226,17 @@ export default function Tasks() {
         return list;
     }, [tasks, filterPlan, search, filterStatus, filterPriority, filterCategory, sortOrder]);
 
-    const grouped = useMemo(() => groupTasks(filteredTasks), [filteredTasks]);
+    const grouped = useMemo(() => groupTasks(filteredTasks, t), [filteredTasks, t]);
 
-    const groupOrder = ['Overdue', 'Today', 'Tomorrow', 'This Week', 'Later', 'No Due Date', 'Completed'];
+    const groupOrder = [
+        t('overdue'),
+        t('today'),
+        t('tomorrow'),
+        t('thisWeek'),
+        t('later'),
+        t('noDueDate'),
+        t('completed'),
+    ];
 
     return (
         <div>
@@ -242,7 +258,7 @@ export default function Tasks() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">Tasks</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">{t('tasks')}</h1>
                     <p className="text-slate-400 text-sm mt-1">{tasks.length} total · {tasks.filter(t => t.status === 'pending').length} pending</p>
                 </div>
                 <button

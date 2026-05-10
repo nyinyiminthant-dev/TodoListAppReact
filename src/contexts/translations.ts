@@ -63,6 +63,7 @@ export const translations = {
     earliest: 'Earliest',
     latest: 'Latest',
     clearFilter: 'Clear Filter',
+    tasks: 'Tasks',
     work: 'Work',
     personal: 'Personal',
     health: 'Health',
@@ -72,6 +73,15 @@ export const translations = {
     cancel: 'Cancel',
     save: 'Save',
     delete: 'Delete',
+
+    // Task groups
+    overdue: 'Overdue',
+    today: 'Today',
+    tomorrow: 'Tomorrow',
+    thisWeek: 'This Week',
+    later: 'Later',
+    noDueDate: 'No Due Date',
+    completed: 'Completed',
 
     // Plans
     newPlan: 'New Plan',
@@ -209,6 +219,7 @@ export const translations = {
     earliest: 'အစဦး',
     latest: 'နောက်ဆုံး',
     clearFilter: 'ဖြည်းချမည်',
+    tasks: 'အလုပ်များ',
     work: 'အလုပ်',
     personal: 'ကိုယ်ရေး',
     health: 'ကျန်းမာရေး',
@@ -218,6 +229,15 @@ export const translations = {
     cancel: 'မလုပ်ပါ',
     save: 'သိမ်းမည်',
     delete: 'ဖျက်မည်',
+
+    // Task groups
+    overdue: 'ကျော်သွားပါပြီ',
+    today: 'ယနေ့',
+    tomorrow: 'မနက်ဖြန်',
+    thisWeek: 'ဒီအပတ်',
+    later: 'နောက်မှ',
+    noDueDate: 'နေ့စွက်မှာ',
+    completed: 'ပြီးဆုံးပါပြီ',
 
     // Plans
     newPlan: 'အစီအစဉ်အသစ်',
