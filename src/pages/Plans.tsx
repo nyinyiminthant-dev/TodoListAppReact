@@ -675,7 +675,7 @@ export default function Plans() {
             {/* Tasks Modal */}
             {tasksModal && (
                 <div
-                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
                     onClick={e => e.target === e.currentTarget && setTasksModal(null)}
                 >
                     <div className="w-full max-w-2xl rounded-3xl bg-slate-900 border border-white/10 shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden flex flex-col">
