@@ -129,7 +129,8 @@ export async function generateTasksFromPlan(
   planDescription: string,
   targetCount: number,
   targetDate: string,
-  frequency: string = 'daily'
+  frequency: string = 'daily',
+  language: string = 'en'
 ): Promise<GeneratedTask[]> {
   const today = new Date();
   const todayStr = formatDateLocal(today);
@@ -142,6 +143,10 @@ export async function generateTasksFromPlan(
   else if (frequency === 'monthly') tasksPerWeek = 0.25;
 
   const estimatedTotalTasks = Math.min(targetCount, Math.max(5, Math.ceil(totalDays * tasksPerWeek / 7)));
+
+  const langInstruction = language === 'my' 
+    ? 'Generate all task titles and descriptions in Burmese (Myanmar) language using Myanmar script.'
+    : 'Generate all task titles and descriptions in English language.';
 
   const prompt = `You are a task breakdown assistant. Break down a plan into specific, actionable tasks.
 
@@ -173,7 +178,8 @@ Rules:
 - Distribute tasks evenly across the timeline
 - Mix priorities realistically (more medium/low than high)
 - dueTime should be empty string (not "00:00")
-- Include relevant category based on the goal`;
+- Include relevant category based on the goal
+- ${langInstruction}`;
 
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
@@ -228,6 +234,8 @@ Rules:
       
       return {
         ...task,
+        title: task.title || `${planTitle} - Task`,
+        description: task.description || `${planTitle} - Step ${tasks.indexOf(task) + 1}`,
         startDate,
         dueDate,
         dueTime: task.dueTime === '00:00' ? '' : (task.dueTime || ''),

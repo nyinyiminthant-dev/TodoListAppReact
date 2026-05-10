@@ -3,6 +3,7 @@ import { Sparkles, X, Loader2, Calendar, Hash, Zap, ListChecks, Trash2, CheckCir
 import { generatePlanRecommendation, generateTasksFromPlan, GeneratedTask } from '../services/aiService';
 import { format } from 'date-fns';
 import { useFirestore } from '../contexts/FirestoreContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import CustomSelect from './CustomSelect';
 
 interface AIPlanAssistantProps {
@@ -17,6 +18,7 @@ interface EditableTask extends GeneratedTask {
 
 export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
   const { addTask } = useFirestore();
+  const { isMyanmar } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [step, setStep] = useState<'plan' | 'tasks'>('plan');
@@ -64,7 +66,8 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
         '',
         recommendation.targetCount,
         recommendation.targetDate,
-        recommendation.suggestedFrequency
+        recommendation.suggestedFrequency,
+        isMyanmar ? 'my' : 'en'
       );
 
       const editableTasks: EditableTask[] = tasks.map((t, i) => ({

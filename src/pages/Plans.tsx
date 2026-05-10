@@ -92,7 +92,7 @@ const emptyForm = { title: '', description: '', startDate: '', targetDate: getDe
 
 export default function Plans() {
     const { plans, tasks, addPlan, updatePlan, deletePlan, addTask } = useFirestore();
-    const { t } = useLanguage();
+    const { t, isMyanmar } = useLanguage();
     const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -219,7 +219,8 @@ export default function Plans() {
                 plan.description,
                 plan.targetCount,
                 plan.targetDate,
-                'daily'
+                'daily',
+                isMyanmar ? 'my' : 'en'
             );
             const editableTasks: EditableTask[] = generated.map((t, i) => ({
                 ...t,
