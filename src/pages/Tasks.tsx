@@ -74,6 +74,7 @@ export default function Tasks() {
     useNotifications();
 
     const [showForm, setShowForm] = useState(searchParams.get('new') === 'true');
+    const [filterPlan, setFilterPlan] = useState<string | null>(searchParams.get('plan'));
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [formData, setFormData] = useState(emptyForm);
     const [search, setSearch] = useState('');
@@ -93,6 +94,10 @@ export default function Tasks() {
         if (searchParams.get('new') === 'true') {
             setShowForm(true);
             setSearchParams({}, { replace: true });
+        }
+        const planParam = searchParams.get('plan');
+        if (planParam) {
+            setFilterPlan(planParam);
         }
     }, [searchParams, setSearchParams]);
 
@@ -189,6 +194,7 @@ export default function Tasks() {
 
     const filteredTasks = useMemo(() => {
         let list = tasks.filter(t => {
+            if (filterPlan && t.planId !== filterPlan) return false;
             if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t.description?.toLowerCase().includes(search.toLowerCase())) return false;
             if (filterStatus !== 'all' && t.status !== filterStatus) return false;
             if (filterPriority !== 'all' && t.priority !== filterPriority) return false;
@@ -203,7 +209,7 @@ export default function Tasks() {
         });
 
         return list;
-    }, [tasks, search, filterStatus, filterPriority, filterCategory, sortOrder]);
+    }, [tasks, filterPlan, search, filterStatus, filterPriority, filterCategory, sortOrder]);
 
     const grouped = useMemo(() => groupTasks(filteredTasks), [filteredTasks]);
 
@@ -267,6 +273,15 @@ export default function Tasks() {
                         <ArrowUpDown className="w-4 h-4" />
                         {sortOrder === 'asc' ? t('earliest') : t('latest')}
                     </button>
+                    {filterPlan && (
+                        <button
+                            onClick={() => setFilterPlan(null)}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-500/20 border border-teal-500/40 text-teal-300 text-sm font-medium hover:bg-teal-500/30 transition-all"
+                        >
+                            <X className="w-4 h-4" />
+                            {t('clearFilter')}
+                        </button>
+                    )}
                 </div>
             </div>
 

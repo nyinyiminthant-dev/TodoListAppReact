@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, X, Pencil, Trash2, ChevronDown, ChevronUp, Calendar, CheckCircle2, Sparkles, Loader2, ListChecks } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, X, Pencil, Trash2, ChevronDown, ChevronUp, Calendar, CheckCircle2, Sparkles, Loader2, ListChecks, ExternalLink } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Plan, PlanStatus } from '../types';
@@ -92,6 +93,7 @@ const emptyForm = { title: '', description: '', startDate: '', targetDate: getDe
 export default function Plans() {
     const { plans, tasks, addPlan, updatePlan, deletePlan, addTask } = useFirestore();
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -103,6 +105,7 @@ export default function Plans() {
     const [aiTaskModal, setAiTaskModal] = useState<{ plan: Plan; tasks: EditableTask[] } | null>(null);
     const [generatingTasks, setGeneratingTasks] = useState(false);
     const [creatingTasks, setCreatingTasks] = useState(false);
+    const [tasksModal, setTasksModal] = useState<Plan | null>(null);
 
     interface EditableTask extends GeneratedTask {
         id: string;
@@ -435,6 +438,15 @@ export default function Plans() {
                                                     ))}
                                                 </div>
                                             )}
+                                            {linkedTasks.length > 0 && (
+                                                <button
+                                                    onClick={() => setTasksModal(plan)}
+                                                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-xs font-medium hover:bg-white/10 hover:text-white transition-all"
+                                                >
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    {t('viewInTasks')}
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -655,6 +667,66 @@ export default function Plans() {
                                     </>
                                 )}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Tasks Modal */}
+            {tasksModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+                    onClick={e => e.target === e.currentTarget && setTasksModal(null)}
+                >
+                    <div className="w-full max-w-2xl rounded-3xl bg-slate-900 border border-white/10 shadow-2xl animate-scale-in max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10 shrink-0">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                                    <ListChecks className="w-4 h-4 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-white">{t('linkedTasks')}</h2>
+                                    <p className="text-xs text-slate-400">{tasksModal.title}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setTasksModal(null)} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto flex-1 space-y-2">
+                            {tasks.filter(t => t.planId === tasksModal.id).length === 0 ? (
+                                <p className="text-sm text-slate-500 text-center py-8">{t('noTasksLinked')}</p>
+                            ) : (
+                                tasks.filter(t => t.planId === tasksModal.id).map(task => (
+                                    <div 
+                                        key={task.id} 
+                                        onClick={() => {
+                                            setTasksModal(null);
+                                            navigate(`/tasks?task=${task.id}`);
+                                        }}
+                                        className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all"
+                                    >
+                                        <CheckCircle2 className={`w-5 h-5 shrink-0 ${task.status === 'completed' ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-sm ${task.status === 'completed' ? 'line-through text-slate-500' : 'text-white'}`}>{task.title}</p>
+                                            {(task.dueDate || task.dueTime) && (
+                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                    {task.dueDate && format(parseISO(task.dueDate), 'MMM d, yyyy')}
+                                                    {task.dueTime && ` at ${task.dueTime}`}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                                            task.priority === 'high' ? 'bg-rose-500/20 text-rose-400' :
+                                            task.priority === 'medium' ? 'bg-amber-500/20 text-amber-400' :
+                                            'bg-emerald-500/20 text-emerald-400'
+                                        }`}>
+                                            {task.priority}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
