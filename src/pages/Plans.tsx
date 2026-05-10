@@ -41,12 +41,12 @@ function calculatePlanStatus(plan: Plan): PlanStatus {
     return 'overdue';
 }
 
-const statusConfig: Record<PlanStatus, { label: string; color: string; bg: string }> = {
-    on_track: { label: 'On Track', color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
-    at_risk: { label: 'At Risk', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
-    completed: { label: 'Completed', color: '#6366f1', bg: 'rgba(99,102,241,0.15)' },
-    overdue: { label: 'Overdue', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
-    failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+const statusConfig: Record<PlanStatus, { labelKey: string; color: string; bg: string }> = {
+    on_track: { labelKey: 'onTrack', color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+    at_risk: { labelKey: 'atRisk', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+    completed: { labelKey: 'completedGroup', color: '#6366f1', bg: 'rgba(99,102,241,0.15)' },
+    overdue: { labelKey: 'overdue', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+    failed: { labelKey: 'failed', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
 };
 
 // ── Circular progress ──────────────────────────────────────────
@@ -383,7 +383,7 @@ export default function Plans() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex flex-wrap items-center gap-2 mb-1">
                                                 <h3 className="text-white font-semibold truncate">{plan.title}</h3>
-                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
+                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: cfg.bg, color: cfg.color }}>{t(cfg.labelKey as any)}</span>
                                             </div>
                                             {plan.description && <p className="text-xs text-slate-400 mb-2 truncate">{plan.description}</p>}
                                             <div className="flex flex-wrap gap-3 text-xs text-slate-400">
@@ -465,7 +465,7 @@ export default function Plans() {
                 >
                     <div className={`w-full max-w-lg rounded-3xl bg-slate-900 border border-white/10 shadow-2xl ${isClosing ? 'animate-scale-out' : 'animate-scale-in'}`}>
                         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
-                            <h2 className="text-lg font-semibold text-white">{editingPlan ? 'Edit Plan' : 'New Plan'}</h2>
+                            <h2 className="text-lg font-semibold text-white">{editingPlan ? t('editPlan') : t('newPlan')}</h2>
                             <button onClick={closeForm} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all">
                                 <X className="w-5 h-5" />
                             </button>
@@ -473,25 +473,25 @@ export default function Plans() {
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Title *</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('title')} *</label>
                                 <input className="input" placeholder="e.g. Complete 30 workouts" value={formData.title} onChange={e => setFormData(f => ({ ...f, title: e.target.value }))} required autoFocus />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Description</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('description')}</label>
                                 <textarea className="input resize-none" rows={2} placeholder="Optional details…" value={formData.description} onChange={e => setFormData(f => ({ ...f, description: e.target.value }))} />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Start Date</label>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startDate')}</label>
                                     <input type="date" className="input" value={formData.startDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))} />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Date *</label>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('targetDate')} *</label>
                                     <input type="date" className="input" value={formData.targetDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData(f => ({ ...f, targetDate: e.target.value }))} required />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-1.5">Target Count</label>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('targetCount')}</label>
                                 <div className="flex items-center gap-2">
                                         <button
                                             type="button"

@@ -18,7 +18,7 @@ interface EditableTask extends GeneratedTask {
 
 export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
   const { addTask } = useFirestore();
-  const { isMyanmar } = useLanguage();
+  const { t, isMyanmar } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [step, setStep] = useState<'plan' | 'tasks'>('plan');
@@ -195,10 +195,10 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-white">
-                    {step === 'plan' ? 'AI Plan Assistant' : 'Generated Tasks'}
+                    {step === 'plan' ? t('aiPlanAssistant') : t('generatedTasks')}
                   </h2>
                   <p className="text-xs text-slate-400">
-                    {step === 'plan' ? 'Get smart recommendations' : `${generatedTasks.length} tasks ready to create`}
+                    {step === 'plan' ? t('getSmartRecommendations') : `${generatedTasks.length} ${t('tasksReadyToCreate')}`}
                   </p>
                 </div>
               </div>
@@ -220,7 +220,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                   )}
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 block mb-1.5">What's your goal?</label>
+                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('whatsYourGoal')}</label>
                     <textarea
                       className="input resize-none"
                       rows={2}
@@ -233,7 +233,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs font-medium text-slate-400 block mb-1.5 flex items-center gap-1">
-                        <Zap className="w-3 h-3" /> Hours/week
+                        <Zap className="w-3 h-3" /> {t('hoursPerWeek')}
                       </label>
                       <input
                         type="text"
@@ -249,19 +249,19 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                       />
                     </div>
                     <CustomSelect
-                      label="Frequency"
+                      label={t('frequency')}
                       value={frequency}
                       onChange={setFrequency}
                       options={[
-                        { value: 'daily', label: 'Daily' },
-                        { value: 'weekly', label: 'Weekly' },
-                        { value: 'monthly', label: 'Monthly' },
+                        { value: 'daily', label: t('daily') },
+                        { value: 'weekly', label: t('weekly') },
+                        { value: 'monthly', label: t('monthly') },
                       ]}
                     />
                   </div>
 
                   <div>
-                    <p className="text-xs text-slate-500 mb-2">Quick start:</p>
+                    <p className="text-xs text-slate-500 mb-2">{t('quickStart')}</p>
                     <div className="flex flex-wrap gap-2">
                       {presetGoals.map(g => (
                         <button
@@ -312,7 +312,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <Zap className="w-4 h-4 text-slate-400" />
-                          <span className="text-sm text-slate-300">Suggested: {recommendation.suggestedFrequency}</span>
+                          <span className="text-sm text-slate-300">{t('suggested')}: {t(recommendation.suggestedFrequency)}</span>
                         </div>
                       </div>
 

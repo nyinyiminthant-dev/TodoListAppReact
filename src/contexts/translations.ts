@@ -86,6 +86,11 @@ export const translations = {
     // Plans
     newPlan: 'New Plan',
     editPlan: 'Edit Plan',
+    title: 'Title',
+    description: 'Description',
+    startDate: 'Start Date',
+    targetDate: 'Target Date',
+    targetCount: 'Target Count',
     totalGoals: 'total goals',
     onTrack: 'On Track',
     atRisk: 'At Risk',
@@ -242,6 +247,11 @@ export const translations = {
     // Plans
     newPlan: 'အစီအစဉ်အသစ်',
     editPlan: 'အစီအစဉ်ပြင်မည်',
+    title: 'ခေါင်းစဉ်',
+    description: 'ဖော်ပြန်းချက်',
+    startDate: 'စတင်ရမည့်နေ့',
+    targetDate: 'ပန်းတိုင်နေ့',
+    targetCount: 'ပမာဏ',
     totalGoals: 'စုစုပေါင်းပန်းတိုင်',
     onTrack: 'လုပ်လက်စ',
     atRisk: 'အန္တရာယ်ရှိ',
