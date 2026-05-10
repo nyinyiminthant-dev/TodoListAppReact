@@ -75,6 +75,7 @@ export default function Tasks() {
 
     const [showForm, setShowForm] = useState(searchParams.get('new') === 'true');
     const [filterPlan, setFilterPlan] = useState<string | null>(searchParams.get('plan'));
+    const [highlightedTask, setHighlightedTask] = useState<string | null>(null);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [formData, setFormData] = useState(emptyForm);
     const [search, setSearch] = useState('');
@@ -98,6 +99,12 @@ export default function Tasks() {
         const planParam = searchParams.get('plan');
         if (planParam) {
             setFilterPlan(planParam);
+        }
+        const taskParam = searchParams.get('task');
+        if (taskParam) {
+            setHighlightedTask(taskParam);
+            setTimeout(() => setHighlightedTask(null), 1500);
+            setSearchParams({}, { replace: true });
         }
     }, [searchParams, setSearchParams]);
 
@@ -325,7 +332,7 @@ export default function Tasks() {
                                 {items.map(task => (
                                     <div
                                         key={task.id}
-                                        className={`flex items-start gap-3 p-4 rounded-2xl bg-white/5 border transition-all hover:bg-white/8 group ${task.status === 'completed' ? 'opacity-60 border-white/5' : 'border-white/10 hover:border-white/20'}`}
+                                        className={`flex items-start gap-3 p-4 rounded-2xl bg-white/5 border transition-all hover:bg-white/8 group ${task.status === 'completed' ? 'opacity-60 border-white/5' : 'border-white/10 hover:border-white/20'} ${highlightedTask === task.id ? 'animate-border-pulse border-violet-400' : ''}`}
                                         style={{ borderLeftWidth: '3px', borderLeftColor: priorityColors[task.priority] }}
                                     >
                                         {/* Checkbox */}
