@@ -312,7 +312,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <Zap className="w-4 h-4 text-slate-400" />
-                          <span className="text-sm text-slate-300">{t('suggested')}: {t(recommendation.suggestedFrequency)}</span>
+                          <span className="text-sm text-slate-300">Suggested: {recommendation.suggestedFrequency}</span>
                         </div>
                       </div>
 
