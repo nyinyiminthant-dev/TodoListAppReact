@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Sparkles, Zap, Target, BarChart3, Shield } from 'lucide-react';
+import { Sparkles, Zap, Target, BarChart3, Shield, Smartphone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+
+const APK_URL = 'https://expo.dev/artifacts/eas/nawqbiGkFo6p9RXRSTprrs.apk';
 
 const features = [
     { icon: Zap, title: 'Smart priorities', desc: 'High, medium & low priority to focus on what matters most.' },
@@ -64,6 +66,16 @@ export default function Login() {
                             {error}
                         </div>
                     )}
+
+                    {/* Mobile App Download */}
+                    <a
+                        href={APK_URL}
+                        download="TodoListAppMobile.apk"
+                        className="flex items-center justify-center gap-2 py-3 mb-4 rounded-2xl bg-violet-600/20 border border-violet-500/30 text-violet-300 font-medium text-sm hover:bg-violet-600/30 transition-all duration-200"
+                    >
+                        <Smartphone className="w-4 h-4" />
+                        Download Mobile App (Android APK)
+                    </a>
 
                     {/* Google Sign-In */}
                     <button
