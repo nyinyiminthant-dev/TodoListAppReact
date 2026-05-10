@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Sparkles, Zap, Target, BarChart3, Shield, Smartphone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const APK_URL = 'https://expo.dev/artifacts/eas/nawqbiGkFo6p9RXRSTprrs.apk';
+const APK_URL = 'https://expo.dev/artifacts/eas/aef2Ecb8nDc8qYiZHjbYYp.apk';
 
 const features = [
     { icon: Zap, title: 'Smart priorities', desc: 'High, medium & low priority to focus on what matters most.' },
