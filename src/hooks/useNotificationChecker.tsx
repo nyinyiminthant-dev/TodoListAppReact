@@ -13,49 +13,26 @@ export function useNotificationChecker() {
   const { tasks, updateTask } = useFirestore();
   const [currentNotification, setCurrentNotification] = useState<TaskNotification | null>(null);
   const [dismissedTasks, setDismissedTasks] = useState<Set<string>>(new Set());
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const playSound = useCallback(async () => {
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
-      
-      if (currentSourceRef.current) {
-        currentSourceRef.current.stop();
-        currentSourceRef.current = null;
-      }
-      
-      const response = await fetch('https://cdn.freesound.org/previews/674/674805_5674468-lq.mp3');
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-      
-      const source = ctx.createBufferSource();
-      source.buffer = audioBuffer;
-      currentSourceRef.current = source;
-      
-      const gainNode = ctx.createGain();
-      gainNode.gain.value = 4.0;
-      
-      source.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      source.start(0);
+      const audio = new Audio();
+      audio.src = 'https://www.soundjay.com/buttons/sounds/button-09a.mp3';
+      audio.volume = 1.0;
+      await audio.play();
+      currentAudioRef.current = audio;
     } catch (e) {
       console.log('Sound error:', e);
     }
   }, []);
 
   const stopSound = useCallback(() => {
-    if (currentSourceRef.current) {
-      try {
-        currentSourceRef.current.stop();
-      } catch (e) {}
-      currentSourceRef.current = null;
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
     }
   }, []);
 
@@ -77,8 +54,9 @@ export function useNotificationChecker() {
 
   useEffect(() => {
     return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
       }
     };
   }, []);
@@ -140,20 +118,15 @@ export function TaskNotificationPopup({ notification, onClose, onStart }: {
   onClose: () => void;
   onStart: (taskId: string) => void;
 }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 6000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4">
       <div className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl shadow-2xl p-4 max-w-sm w-full transform animate-slide-down">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 animate-pulse">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
             {notification.type === 'start' ? (
-              <PlayCircle className="w-7 h-7 text-white" />
+              <PlayCircle className="w-7 h-7 text-white animate-pulse" />
             ) : (
-              <CheckCircle className="w-7 h-7 text-white" />
+              <CheckCircle className="w-7 h-7 text-white animate-pulse" />
             )}
           </div>
           
@@ -184,10 +157,9 @@ export function TaskNotificationPopup({ notification, onClose, onStart }: {
           </button>
         )}
         
-        <div className="mt-3 flex gap-1">
-          <div className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-white animate-progress-6s w-full" />
-          </div>
+        <div className="mt-3 flex items-center gap-2 text-white/60 text-xs">
+          <Bell className="w-3 h-3" />
+          <span>Tap X to dismiss</span>
         </div>
       </div>
     </div>
