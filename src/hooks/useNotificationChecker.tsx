@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Bell, PlayCircle, CheckCircle } from 'lucide-react';
+import { X, Bell, PlayCircle, CheckCircle, Play } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { parseISO, isToday, differenceInMinutes, setHours, setMinutes } from 'date-fns';
 
@@ -10,19 +10,60 @@ interface TaskNotification {
 }
 
 export function useNotificationChecker() {
-  const { tasks } = useFirestore();
+  const { tasks, updateTask } = useFirestore();
   const [currentNotification, setCurrentNotification] = useState<TaskNotification | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [dismissedTasks, setDismissedTasks] = useState<Set<string>>(new Set());
+  const audioContextRef = useRef<AudioContext | null>(null);
 
-  const playSound = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
+  const playSound = useCallback(async () => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      
+      const response = await fetch('https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = 4.0;
+      
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      source.start(0);
+    } catch (e) {
+      console.log('Sound error:', e);
     }
   }, []);
 
+  const markAsStarted = useCallback(async (taskId: string) => {
+    try {
+      await updateTask(taskId, { status: 'in_progress' });
+      setDismissedTasks(prev => new Set(prev).add(taskId));
+      setCurrentNotification(null);
+    } catch (e) {
+      console.log('Error marking task as started:', e);
+    }
+  }, [updateTask]);
+
+  const dismissTask = useCallback((taskId: string) => {
+    setDismissedTasks(prev => new Set(prev).add(taskId));
+    setCurrentNotification(null);
+  }, []);
+
   useEffect(() => {
-    audioRef.current = new Audio('https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3');
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -31,6 +72,7 @@ export function useNotificationChecker() {
       
       for (const task of tasks) {
         if (task.status === 'completed') continue;
+        if (dismissedTasks.has(task.id)) continue;
 
         if (task.startDate && task.startTime) {
           const startDateParsed = parseISO(task.startDate);
@@ -64,18 +106,21 @@ export function useNotificationChecker() {
     checkNotifications();
 
     return () => clearInterval(interval);
-  }, [tasks, playSound]);
+  }, [tasks, playSound, dismissedTasks]);
 
   const dismissNotification = () => {
-    setCurrentNotification(null);
+    if (currentNotification) {
+      dismissTask(currentNotification.id);
+    }
   };
 
-  return { currentNotification, dismissNotification };
+  return { currentNotification, dismissNotification, markAsStarted, dismissTask };
 }
 
-export function TaskNotificationPopup({ notification, onClose }: { 
+export function TaskNotificationPopup({ notification, onClose, onStart }: { 
   notification: TaskNotification; 
   onClose: () => void;
+  onStart: (taskId: string) => void;
 }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 6000);
@@ -110,6 +155,16 @@ export function TaskNotificationPopup({ notification, onClose }: {
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
+        
+        {notification.type === 'start' && (
+          <button
+            onClick={() => onStart(notification.id)}
+            className="mt-3 w-full py-2.5 bg-white text-violet-600 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
+          >
+            <Play className="w-4 h-4" />
+            Start Task
+          </button>
+        )}
         
         <div className="mt-3 flex gap-1">
           <div className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">

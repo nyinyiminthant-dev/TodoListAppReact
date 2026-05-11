@@ -9,7 +9,7 @@ import InstallPWA from './components/InstallPWA';
 import { TaskNotificationPopup, useNotificationChecker } from './hooks/useNotificationChecker';
 
 function AppContent() {
-  const { currentNotification, dismissNotification } = useNotificationChecker();
+  const { currentNotification, dismissNotification, markAsStarted } = useNotificationChecker();
   
   return (
     <>
@@ -23,7 +23,8 @@ function AppContent() {
       {currentNotification && (
         <TaskNotificationPopup 
           notification={currentNotification} 
-          onClose={dismissNotification} 
+          onClose={dismissNotification}
+          onStart={markAsStarted}
         />
       )}
     </>
