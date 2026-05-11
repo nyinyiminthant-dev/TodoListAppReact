@@ -10,7 +10,7 @@ import { useFirestore } from '../contexts/FirestoreContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Task, Plan, Priority, Category } from '../types';
-import { parseISO, isToday, isTomorrow, isPast, format, isWithinInterval, addDays } from 'date-fns';
+import { parseISO, isToday, isTomorrow, isPast, format, isWithinInterval, addDays, setHours, setMinutes, isBefore, differenceInMinutes } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -42,39 +42,58 @@ const emptyForm = {
     planId: null as string | null,
 };
 
-function groupTasks(tasks: Task[], t: (key: string) => string) {
-    const now = new Date();
-    const groups: Record<string, Task[]> = {
-        [t('overdue')]: [],
-        [t('today')]: [],
-        [t('tomorrow')]: [],
-        [t('thisWeek')]: [],
-        [t('later')]: [],
-        [t('noDueDate')]: [],
-        [t('completed')]: [],
+const isOverdue = (task: Task): boolean => {
+        if (!task.dueDate || task.status === 'completed') return false;
+        
+        const now = new Date();
+        const dueDate = parseISO(task.dueDate);
+        
+        if (isPast(dueDate)) {
+          if (isToday(dueDate) && task.dueTime) {
+            const [hours, minutes] = task.dueTime.split(':').map(Number);
+            const dueDateTime = setMinutes(setHours(dueDate, hours), minutes);
+            return isBefore(dueDateTime, now);
+          }
+          return true;
+        }
+        return false;
     };
 
-    const overdueKey = t('overdue');
-    const todayKey = t('today');
-    const tomorrowKey = t('tomorrow');
-    const thisWeekKey = t('thisWeek');
-    const laterKey = t('later');
-    const noDueDateKey = t('noDueDate');
-    const completedKey = t('completed');
+    function groupTasks(tasks: Task[], t: (key: string) => string) {
+        const now = new Date();
+        const groups: Record<string, Task[]> = {
+            [t('overdue')]: [],
+            [t('today')]: [],
+            [t('tomorrow')]: [],
+            [t('thisWeek')]: [],
+            [t('later')]: [],
+            [t('noDueDate')]: [],
+            [t('completed')]: [],
+        };
 
-    for (const task of tasks) {
-        if (task.status === 'completed') { groups[completedKey].push(task); continue; }
-        if (!task.dueDate) { groups[noDueDateKey].push(task); continue; }
-        const d = parseISO(task.dueDate);
-        if (isPast(d) && !isToday(d)) { groups[overdueKey].push(task); continue; }
-        if (isToday(d)) { groups[todayKey].push(task); continue; }
-        if (isTomorrow(d)) { groups[tomorrowKey].push(task); continue; }
-        if (isWithinInterval(d, { start: now, end: addDays(now, 7) })) { groups[thisWeekKey].push(task); continue; }
-        groups[laterKey].push(task);
+        const overdueKey = t('overdue');
+        const todayKey = t('today');
+        const tomorrowKey = t('tomorrow');
+        const thisWeekKey = t('thisWeek');
+        const laterKey = t('later');
+        const noDueDateKey = t('noDueDate');
+        const completedKey = t('completed');
+
+        for (const task of tasks) {
+            if (task.status === 'completed') { groups[completedKey].push(task); continue; }
+            if (!task.dueDate) { groups[noDueDateKey].push(task); continue; }
+            
+            if (isOverdue(task)) { groups[overdueKey].push(task); continue; }
+            
+            const d = parseISO(task.dueDate);
+            if (isToday(d)) { groups[todayKey].push(task); continue; }
+            if (isTomorrow(d)) { groups[tomorrowKey].push(task); continue; }
+            if (isWithinInterval(d, { start: now, end: addDays(now, 7) })) { groups[thisWeekKey].push(task); continue; }
+            groups[laterKey].push(task);
+        }
+
+        return groups;
     }
-
-    return groups;
-}
 
 export default function Tasks() {
     const { tasks, plans, addTask, updateTask, deleteTask, updatePlan } = useFirestore();

@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useFirestore } from '../contexts/FirestoreContext';
-import { parseISO, isToday, differenceInMinutes } from 'date-fns';
+import { parseISO, isToday, isBefore, isAfter, differenceInMinutes, setHours, setMinutes } from 'date-fns';
 
 export function useNotifications() {
   const { tasks } = useFirestore();
@@ -15,46 +15,97 @@ export function useNotifications() {
     return permission === 'granted';
   }, []);
 
-  const sendNotification = useCallback((title: string, body: string, icon?: string) => {
+  const sendNotification = useCallback((title: string, body: string) => {
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
 
     new Notification(title, {
       body,
-      icon: icon || '/icon.png',
-      badge: '/badge.png',
+      icon: '/icon-192.png',
       tag: 'todolist-reminder',
       requireInteraction: false,
     });
   }, []);
 
-  // Check for due tasks and send notifications
+  const checkOverdue = useCallback((task: Task) => {
+    if (!task.dueDate || task.status === 'completed') return false;
+    
+    const now = new Date();
+    const dueDate = parseISO(task.dueDate);
+    
+    if (isBefore(dueDate, now)) {
+      if (isToday(dueDate) && task.dueTime) {
+        const [hours, minutes] = task.dueTime.split(':').map(Number);
+        const dueDateTime = setMinutes(setHours(dueDate, hours), minutes);
+        return isBefore(dueDateTime, now);
+      }
+      return true;
+    }
+    return false;
+  }, []);
+
+  const checkStartTime = useCallback((task: Task) => {
+    if (!task.startDate || !task.startTime || task.status === 'completed') return null;
+    
+    const now = new Date();
+    const startDate = parseISO(task.startDate);
+    
+    if (isToday(startDate)) {
+      const [hours, minutes] = task.startTime.split(':').map(Number);
+      const startDateTime = setMinutes(setHours(startDate, hours), minutes);
+      const diff = differenceInMinutes(startDateTime, now);
+      
+      if (diff <= 5 && diff >= -5) {
+        return diff <= 0 ? 'now' : `in ${diff} minutes`;
+      }
+    }
+    return null;
+  }, []);
+
+  const checkDueTime = useCallback((task: Task) => {
+    if (!task.dueDate || !task.dueTime || task.status === 'completed') return null;
+    
+    const now = new Date();
+    const dueDate = parseISO(task.dueDate);
+    
+    if (isToday(dueDate)) {
+      const [hours, minutes] = task.dueTime.split(':').map(Number);
+      const dueDateTime = setMinutes(setHours(dueDate, hours), minutes);
+      const diff = differenceInMinutes(dueDateTime, now);
+      
+      if (diff <= 15 && diff >= -5) {
+        return diff <= 0 ? 'now' : `in ${diff} minutes`;
+      }
+    }
+    return null;
+  }, []);
+
   useEffect(() => {
     const checkNotifications = () => {
-      const pendingTasks = tasks.filter(t => 
-        t.status === 'pending' && 
-        t.dueDate && 
-        t.dueTime &&
-        isToday(parseISO(t.dueDate))
-      );
-
-      pendingTasks.forEach(task => {
-        const [hours, minutes] = task.dueTime.split(':').map(Number);
-        const dueTime = new Date();
-        dueTime.setHours(hours, minutes, 0, 0);
+      const now = new Date();
+      
+      tasks.forEach(task => {
+        if (task.status === 'completed') return;
         
-        const diff = differenceInMinutes(dueTime, new Date());
-        
-        // Notify 15 minutes before or at due time
-        if (diff <= 15 && diff >= 0) {
-          const key = `notified-${task.id}-${new Date().toDateString()}`;
+        const startStatus = checkStartTime(task);
+        if (startStatus) {
+          const key = `start-${task.id}-${new Date().toDateString()}`;
           if (!sessionStorage.getItem(key)) {
             sendNotification(
-              `Task Due Soon: ${task.title}`,
-              diff <= 0 
-                ? 'This task is due now!' 
-                : `Due in ${diff} minutes`,
-              '/icon.png'
+              `Start: ${task.title}`,
+              startStatus === 'now' ? 'Time to start this task!' : `Starting ${startStatus}`,
+            );
+            sessionStorage.setItem(key, 'true');
+          }
+        }
+        
+        const dueStatus = checkDueTime(task);
+        if (dueStatus) {
+          const key = `due-${task.id}-${new Date().toDateString()}`;
+          if (!sessionStorage.getItem(key)) {
+            sendNotification(
+              task.title,
+              dueStatus === 'now' ? 'Due now!' : `Due ${dueStatus}`,
             );
             sessionStorage.setItem(key, 'true');
           }
@@ -64,34 +115,40 @@ export function useNotifications() {
 
     requestPermission();
     
-    // Check every minute
     const interval = setInterval(checkNotifications, 60000);
     checkNotifications();
 
     return () => clearInterval(interval);
-  }, [tasks, sendNotification, requestPermission]);
+  }, [tasks, sendNotification, requestPermission, checkStartTime, checkDueTime]);
 
-  // Check for overdue tasks
   useEffect(() => {
     const now = new Date();
-    const overdue = tasks.filter(t => 
-      t.status === 'pending' && 
-      t.dueDate && 
-      parseISO(t.dueDate) < now
-    );
-
-    if (overdue.length > 0) {
-      const key = `notified-overdue-${new Date().toDateString()}`;
-      if (!sessionStorage.getItem(key)) {
-        sendNotification(
-          'You have overdue tasks!',
-          `${overdue.length} task${overdue.length > 1 ? 's' : ''} overdue`,
-          '/icon.png'
-        );
-        sessionStorage.setItem(key, 'true');
+    
+    tasks.forEach(task => {
+      if (task.status === 'completed') return;
+      
+      if (checkOverdue(task)) {
+        const key = `overdue-${task.id}-${new Date().toDateString()}`;
+        if (!sessionStorage.getItem(key)) {
+          sendNotification(
+            'Task Overdue!',
+            `"${task.title}" is past due time`,
+          );
+          sessionStorage.setItem(key, 'true');
+        }
       }
-    }
-  }, [tasks, sendNotification]);
+    });
+  }, [tasks, sendNotification, checkOverdue]);
 
-  return { requestPermission, sendNotification };
+  return { requestPermission, sendNotification, checkOverdue, checkStartTime, checkDueTime };
+}
+
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+  dueDate: string;
+  dueTime: string;
+  startDate: string | null;
+  startTime: string;
 }
