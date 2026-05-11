@@ -59,13 +59,8 @@ export function usePWAInstall() {
       return;
     }
 
-    const ua = navigator.userAgent.toLowerCase();
-    if (ua.includes('chrome') && !ua.includes('edg')) {
-      alert('In Chrome: Click the install icon in the address bar (right side of URL)');
-    } else if (ua.includes('safari') && ua.includes('iphone')) {
-      alert('In Safari iOS: Tap Share button → Add to Home Screen');
-    } else {
-      alert('To install: Open browser menu → Add to Home Screen');
+    if (isInstallable === false) {
+      alert('Please wait a moment after visiting the site, then try clicking Install App button again.\n\nOr use browser menu: Menu → Install TodoList Pro');
     }
   };
 
