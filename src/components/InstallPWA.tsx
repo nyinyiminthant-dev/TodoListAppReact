@@ -1,8 +1,15 @@
+import { useEffect } from 'react';
 import { X, Sparkles } from 'lucide-react';
-import { usePWAInstall } from '../hooks/usePWAInstall';
+import { usePWAInstall, triggerInstallDialog } from '../hooks/usePWAInstall';
 
-export default function InstallPWA() {
-  const { showInstallDialog, dismissDialog, confirmInstall, canInstall, isInstalled } = usePWAInstall();
+function InstallPWAComponent() {
+  const { showInstallDialog, isInstalled, showDialog, dismissDialog, confirmInstall } = usePWAInstall();
+
+  useEffect(() => {
+    const handler = () => showDialog();
+    window.addEventListener('showInstallDialog', handler);
+    return () => window.removeEventListener('showInstallDialog', handler);
+  }, [showDialog]);
 
   if (!showInstallDialog) return null;
 
@@ -21,21 +28,21 @@ export default function InstallPWA() {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {isInstalled ? 'Already Installed' : 'Install TodoList Pro'}
+            Install TodoList Pro
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            {isInstalled ? 'App is already on your home screen' : 'Add to home screen for quick access'}
+            Add to home screen for quick access
           </p>
-          {!isInstalled && (
-            <button
-              onClick={confirmInstall}
-              className="w-full py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
-            >
-              Install Now
-            </button>
-          )}
+          <button
+            onClick={confirmInstall}
+            className="w-full py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+          >
+            Install
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
+export default InstallPWAComponent;
