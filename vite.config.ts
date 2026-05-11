@@ -11,11 +11,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon-192.png', 'icon-512.png', 'maskable-icon.png', 'favicon.svg'],
       manifest: {
-        name: 'Todo List App',
+        name: 'TodoList Pro',
         short_name: 'TodoList',
         description: 'Task management app with AI planning assistant',
-        theme_color: '#3b82f6',
-        background_color: '#ffffff',
+        theme_color: '#0a0f1a',
+        background_color: '#0a0f1a',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
@@ -41,7 +41,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        navigateFallback: '/'
       },
       devOptions: {
         enabled: true
