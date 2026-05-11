@@ -1,40 +1,38 @@
-import { X, Download } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function InstallPWA() {
-  const { isInstallable, isInstalled, install, dismiss } = usePWAInstall();
+  const { showInstallDialog, dismissDialog, confirmInstall } = usePWAInstall();
 
-  if (!isInstallable || isInstalled) return null;
+  if (!showInstallDialog) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-4 border border-gray-200 dark:border-gray-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={dismissDialog} />
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm">
         <button
-          onClick={dismiss}
-          className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-          aria-label="Dismiss"
+          onClick={dismissDialog}
+          className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
         >
-          <X className="w-4 h-4 text-gray-500" />
+          <X className="w-5 h-5 text-gray-500" />
         </button>
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <Download className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-4">
+            <Sparkles className="w-8 h-8 text-white" />
           </div>
-          <div className="flex-1">
-            <p className="font-medium text-gray-900 dark:text-white text-sm">
-              Install TodoList App
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Add to home screen for quick access
-            </p>
-          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Install TodoList Pro
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            Add to home screen for quick access and offline use
+          </p>
+          <button
+            onClick={confirmInstall}
+            className="w-full py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+          >
+            Install
+          </button>
         </div>
-        <button
-          onClick={install}
-          className="mt-3 w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          Install
-        </button>
       </div>
     </div>
   );

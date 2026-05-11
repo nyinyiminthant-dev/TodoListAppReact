@@ -6,7 +6,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function usePWAInstall() {
-  const [isInstallable, setIsInstallable] = useState(false);
+  const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
 
@@ -19,12 +19,11 @@ export function usePWAInstall() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       promptRef.current = e as BeforeInstallPromptEvent;
-      setIsInstallable(true);
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
-      setIsInstallable(false);
+      setShowInstallDialog(false);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -36,12 +35,16 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const install = async () => {
-    if (isInstalled) {
-      alert('App is already installed!');
-      return;
-    }
+  const promptInstall = () => {
+    if (isInstalled) return;
+    setShowInstallDialog(true);
+  };
 
+  const dismissDialog = () => {
+    setShowInstallDialog(false);
+  };
+
+  const confirmInstall = async () => {
     const prompt = promptRef.current;
 
     if (prompt) {
@@ -51,18 +54,12 @@ export function usePWAInstall() {
         if (outcome === 'accepted') {
           setIsInstalled(true);
         }
-        promptRef.current = null;
-        setIsInstallable(false);
       } catch (e) {
         console.error('Install failed:', e);
       }
-      return;
     }
-
-    if (isInstallable === false) {
-      alert('Please wait a moment after visiting the site, then try clicking Install App button again.\n\nOr use browser menu: Menu → Install TodoList Pro');
-    }
+    setShowInstallDialog(false);
   };
 
-  return { isInstallable, isInstalled, install };
+  return { showInstallDialog, isInstalled, promptInstall, dismissDialog, confirmInstall };
 }
