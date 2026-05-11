@@ -35,6 +35,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [appearanceOpen, setAppearanceOpen] = useState(false);
     const [languageOpen, setLanguageOpen] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [fileInputRef] = useState<HTMLInputElement>(null);
 
     const colorThemes: { id: ColorTheme; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -64,13 +65,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         checkNotificationPermission();
     }, []);
 
-    const handleEnableNotifications = async () => {
+const handleEnableNotifications = async () => {
         try {
             if (!('Notification' in window)) {
-                alert('Notifications not supported');
                 return;
             }
             if (Notification.permission === 'granted') {
+                setNotificationsEnabled(true);
                 new Notification('Test Notification', {
                     body: 'Notifications are working!',
                     icon: '/icon-192.png'
@@ -89,6 +90,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             console.error('Failed:', error);
         }
     };
+
+    useEffect(() => {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            setNotificationsEnabled(true);
+        }
+    }, []);
 
     const handleExport = () => {
         const json = exportData();
@@ -393,9 +400,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 </button>
                                 <button
                                     onClick={handleEnableNotifications}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all text-sm"
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
+                                        notificationsEnabled 
+                                            ? 'bg-emerald-500/20 text-emerald-300' 
+                                            : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
+                                    }`}
                                 >
-                                    <Bell className="w-4 h-4" /> Enable Notifications
+                                    <Bell className="w-4 h-4" /> 
+                                    {notificationsEnabled ? 'Notifications On' : 'Enable Notifications'}
                                 </button>
                                 <input
                                     ref={fileInputRef}
