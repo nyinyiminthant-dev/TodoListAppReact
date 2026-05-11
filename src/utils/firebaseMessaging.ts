@@ -1,48 +1,18 @@
-import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
-import { getToken, onMessage, Messaging } from 'firebase/messaging';
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || '';
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let messaging: Messaging | null = null;
-let messageListenerSetup = false;
-
-export const initializeFCM = async (): Promise<Messaging | null> => {
-  try {
-    const { getMessaging, isSupported } = await import('firebase/messaging');
-    const supported = await isSupported();
-    if (supported) {
-      messaging = getMessaging(app);
-      return messaging;
-    }
-  } catch (error) {
-    console.log('Firebase messaging not supported:', error);
-  }
-  return null;
-};
+import { db } from './firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth } from './firebase';
 
 export const requestNotificationPermission = async (): Promise<boolean> => {
-  if (!messaging) {
-    await initializeFCM();
+  if (!('Notification' in window)) {
+    console.warn('Notifications not supported in this browser');
+    return false;
   }
 
-  if (!messaging) {
-    console.warn('Messaging not supported');
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  if (Notification.permission === 'denied') {
     return false;
   }
 
@@ -50,25 +20,13 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
     const permission = await Notification.requestPermission();
     return permission === 'granted';
   } catch (error) {
-    console.error('Error requesting permission:', error);
+    console.error('Error requesting notification permission:', error);
     return false;
   }
 };
 
 export const getFCMToken = async (): Promise<string | null> => {
-  if (!messaging) {
-    await initializeFCM();
-  }
-
-  if (!messaging) return null;
-
-  try {
-    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-    return token;
-  } catch (error) {
-    console.error('Error getting FCM token:', error);
-    return null;
-  }
+  return 'browser-notification';
 };
 
 export const saveTokenToUser = async (token: string): Promise<void> => {
@@ -100,13 +58,7 @@ export const removeTokenFromUser = async (): Promise<void> => {
 };
 
 export const setupForegroundListener = (onMessageCallback: (payload: any) => void): void => {
-  if (messageListenerSetup || !messaging) return;
-
-  onMessage(messaging, (payload) => {
-    console.log('Foreground message received:', payload);
-    onMessageCallback(payload);
-  });
-  messageListenerSetup = true;
+  console.log('Using native notifications, no foreground handler');
 };
 
 export const showLocalNotification = (title: string, body: string, icon?: string): void => {
@@ -118,7 +70,6 @@ export const showLocalNotification = (title: string, body: string, icon?: string
     icon: icon || '/icon-192.png',
     badge: '/icon-192.png',
     tag: 'todolist-notification',
-    requireInteraction: false,
   });
 };
 
@@ -141,51 +92,55 @@ interface Plan {
 export const checkAndNotify = (tasks: Task[], plans: Plan[]): void => {
   const now = new Date();
 
-  const taskStatuses = tasks
-    .filter(t => t.status !== 'completed')
-    .map(t => {
-      const notifications: string[] = [];
+  for (const task of tasks) {
+    if (task.status === 'completed') continue;
 
-      if (t.startDate && t.startTime && t.startDate === formatDate(now)) {
-        const startH = parseInt(t.startTime.split(':')[0]);
-        const startM = parseInt(t.startTime.split(':')[1]);
-        const startTime = now.getHours() * 60 + now.getMinutes();
-        const taskStart = startH * 60 + startM;
-        const diff = taskStart - startTime;
+    if (task.startDate && task.startTime && task.startDate === formatDate(now)) {
+      const startH = parseInt(task.startTime.split(':')[0]);
+      const startM = parseInt(task.startTime.split(':')[1]);
+      const startTime = now.getHours() * 60 + now.getMinutes();
+      const taskStart = startH * 60 + startM;
+      const diff = taskStart - startTime;
 
-        if (diff <= 5 && diff >= 0) {
-          notifications.push(`Start: ${t.title} ${diff === 0 ? 'now' : `in ${diff} min`}`);
+      if (diff <= 5 && diff >= 0) {
+        const key = `start-${task.id}`;
+        if (!sessionStorage.getItem(key)) {
+          showLocalNotification(
+            'Start Reminder',
+            diff === 0 ? `Time to start: ${task.title}` : `Starting in ${diff} min: ${task.title}`
+          );
+          sessionStorage.setItem(key, 'true');
+        }
+      }
+    }
+
+    if (task.dueDate && task.dueTime && task.dueDate === formatDate(now)) {
+      const dueH = parseInt(task.dueTime.split(':')[0]);
+      const dueM = parseInt(task.dueTime.split(':')[1]);
+      const nowTime = now.getHours() * 60 + now.getMinutes();
+      const taskDue = dueH * 60 + dueM;
+      const diff = taskDue - nowTime;
+
+      if (diff <= 5 && diff >= 0) {
+        const key = `due-${task.id}`;
+        if (!sessionStorage.getItem(key)) {
+          showLocalNotification(
+            'Due Reminder',
+            diff === 0 ? `Due now: ${task.title}` : `Due in ${diff} min: ${task.title}`
+          );
+          sessionStorage.setItem(key, 'true');
         }
       }
 
-      if (t.dueDate && t.dueTime && t.dueDate === formatDate(now)) {
-        const dueH = parseInt(t.dueTime.split(':')[0]);
-        const dueM = parseInt(t.dueTime.split(':')[1]);
-        const nowTime = now.getHours() * 60 + now.getMinutes();
-        const taskDue = dueH * 60 + dueM;
-        const diff = taskDue - nowTime;
-
-        if (diff <= 5 && diff >= 0) {
-          notifications.push(`${t.title} due ${diff === 0 ? 'now' : `in ${diff} min`}`);
+      if (diff < 0) {
+        const key = `overdue-${task.id}`;
+        if (!sessionStorage.getItem(key)) {
+          showLocalNotification(
+            'Task Overdue!',
+            `${task.title} is past due time`
+          );
+          sessionStorage.setItem(key, 'true');
         }
-
-        if (diff < 0) {
-          notifications.push(`${t.title} overdue!`);
-        }
-      }
-
-      return { task: t, notifications };
-    });
-
-  for (const { task, notifications } of taskStatuses) {
-    for (const notif of notifications) {
-      const key = `${task.id}-${notif}`;
-      if (!sessionStorage.getItem(key)) {
-        showLocalNotification(
-          notif.includes('overdue') ? 'Task Overdue!' : 'TodoList Reminder',
-          notif
-        );
-        sessionStorage.setItem(key, 'true');
       }
     }
   }
