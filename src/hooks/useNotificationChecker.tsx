@@ -14,14 +14,7 @@ export function useNotificationChecker() {
   const [currentNotification, setCurrentNotification] = useState<TaskNotification | null>(null);
 
   const showBrowserNotification = useCallback((task: any, type: string) => {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    
-    const title = type === 'start' ? 'Time to Start' : 'Due Now';
-    new Notification(title, {
-      body: task.title,
-      icon: '/icon-192.png',
-      tag: `task-${task.id}`,
-    });
+    // Browser notification removed - only show custom popup
   }, []);
 
   useEffect(() => {
