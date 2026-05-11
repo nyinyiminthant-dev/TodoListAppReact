@@ -5,7 +5,6 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Analytics from './pages/Analytics';
 import Plans from './pages/Plans';
-import InstallPWA from './components/InstallPWA';
 
 function App() {
   return (
@@ -18,7 +17,6 @@ function App() {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/plans" element={<Plans />} />
           </Routes>
-          <InstallPWA />
         </AppProvider>
       </LanguageProvider>
     </BrowserRouter>
