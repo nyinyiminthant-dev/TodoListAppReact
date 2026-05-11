@@ -11,9 +11,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useTheme, ColorTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { usePWAInstall } from '../hooks/usePWAInstall';
-import { requestNotificationPermission, getFCMToken, saveTokenToUser } from '../utils/firebaseMessaging';
-import { Language } from '../contexts/LanguageContext';
 import ConfirmDialog from './ConfirmDialog';
 
 const navItems = [
@@ -33,14 +30,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { exportData, importData, clearAllData } = useFirestore();
     const { mode, colorTheme, setMode, setColorTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
-    const { showDialog } = usePWAInstall();
     const navigate = useNavigate();
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [appearanceOpen, setAppearanceOpen] = useState(false);
     const [languageOpen, setLanguageOpen] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
-    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-    const [notificationStatus, setNotificationStatus] = useState<'idle' | 'success' | 'error' | null>(null);
     const [fileInputRef] = useState<HTMLInputElement>(null);
 
     const colorThemes: { id: ColorTheme; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -72,27 +66,29 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
     const handleEnableNotifications = async () => {
         try {
-            const hasPermission = await requestNotificationPermission();
-            if (hasPermission) {
-                await getFCMToken();
-                await saveTokenToUser('enabled');
+            if (!('Notification' in window)) {
+                alert('Notifications not supported');
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                new Notification('Test Notification', {
+                    body: 'Notifications are working!',
+                    icon: '/icon-192.png'
+                });
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
                 setNotificationsEnabled(true);
-                setNotificationStatus('success');
-            } else {
-                setNotificationStatus('error');
+                new Notification('Notifications Enabled!', {
+                    body: 'You will receive reminders for your tasks.',
+                    icon: '/icon-192.png'
+                });
             }
         } catch (error) {
-            console.error('Failed to enable notifications:', error);
-            setNotificationStatus('error');
+            console.error('Failed:', error);
         }
     };
-
-    useEffect(() => {
-        if (notificationStatus) {
-            const timer = setTimeout(() => setNotificationStatus(null), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [notificationStatus]);
 
     const handleExport = () => {
         const json = exportData();
@@ -389,25 +385,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 >
                                     <Trash2 className="w-4 h-4" /> {t('clearAllData')}
                                 </button>
-<button
-                                    onClick={showDialog}
+                                <button
+                                    onClick={handleEnableNotifications}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
                                 >
                                     <Sparkles className="w-4 h-4" /> Install App
                                 </button>
                                 <button
                                     onClick={handleEnableNotifications}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
-                                        notificationStatus === 'success' ? 'bg-emerald-500/20 text-emerald-300' :
-                                        notificationStatus === 'error' ? 'bg-rose-500/20 text-rose-300' :
-                                        notificationsEnabled ? 'bg-emerald-500/20 text-emerald-300' :
-                                        'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
-                                    }`}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all text-sm"
                                 >
-                                    <Bell className="w-4 h-4" /> 
-                                    {notificationStatus === 'success' ? 'Notifications Enabled!' :
-                                     notificationStatus === 'error' ? 'Enable Failed' :
-                                     notificationsEnabled ? 'Notifications On' : 'Enable Notifications'}
+                                    <Bell className="w-4 h-4" /> Enable Notifications
                                 </button>
                                 <input
                                     ref={fileInputRef}
