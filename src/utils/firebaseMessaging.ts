@@ -1,32 +1,36 @@
-import { db } from './firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import { auth } from './firebase';
 
-export const requestNotificationPermission = async (): Promise<boolean> => {
+type NotificationStatus = 'granted' | 'denied' | 'blocked' | 'unsupported';
+
+export const requestNotificationPermission = async (): Promise<NotificationStatus> => {
   if (!('Notification' in window)) {
-    console.warn('Notifications not supported in this browser');
-    return false;
+    return 'unsupported';
   }
 
   if (Notification.permission === 'granted') {
-    return true;
+    return 'granted';
   }
 
   if (Notification.permission === 'denied') {
-    return false;
+    return 'denied';
   }
 
   try {
     const permission = await Notification.requestPermission();
-    return permission === 'granted';
+    if (permission === 'granted') {
+      return 'granted';
+    }
+    return 'blocked';
   } catch (error) {
     console.error('Error requesting notification permission:', error);
-    return false;
+    return 'denied';
   }
 };
 
 export const getFCMToken = async (): Promise<string | null> => {
-  return 'browser-notification';
+  return 'browser-notification-enabled';
 };
 
 export const saveTokenToUser = async (token: string): Promise<void> => {
@@ -57,19 +61,15 @@ export const removeTokenFromUser = async (): Promise<void> => {
   }
 };
 
-export const setupForegroundListener = (onMessageCallback: (payload: any) => void): void => {
-  console.log('Using native notifications, no foreground handler');
-};
-
-export const showLocalNotification = (title: string, body: string, icon?: string): void => {
+export const showLocalNotification = (title: string, body: string): void => {
   if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
 
   new Notification(title, {
     body,
-    icon: icon || '/icon-192.png',
+    icon: '/icon-192.png',
     badge: '/icon-192.png',
-    tag: 'todolist-notification',
+    tag: 'todolist-reminder',
   });
 };
 
