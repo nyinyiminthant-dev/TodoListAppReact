@@ -14,6 +14,7 @@ export function useNotificationChecker() {
   const [currentNotification, setCurrentNotification] = useState<TaskNotification | null>(null);
   const [dismissedTasks, setDismissedTasks] = useState<Set<string>>(new Set());
   const audioContextRef = useRef<AudioContext | null>(null);
+  const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const playSound = useCallback(async () => {
     try {
@@ -25,12 +26,18 @@ export function useNotificationChecker() {
         await ctx.resume();
       }
       
-      const response = await fetch('https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3');
+      if (currentSourceRef.current) {
+        currentSourceRef.current.stop();
+        currentSourceRef.current = null;
+      }
+      
+      const response = await fetch('https://cdn.freesound.org/previews/674/674805_5674468-lq.mp3');
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
       
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
+      currentSourceRef.current = source;
       
       const gainNode = ctx.createGain();
       gainNode.gain.value = 4.0;
@@ -43,15 +50,25 @@ export function useNotificationChecker() {
     }
   }, []);
 
+  const stopSound = useCallback(() => {
+    if (currentSourceRef.current) {
+      try {
+        currentSourceRef.current.stop();
+      } catch (e) {}
+      currentSourceRef.current = null;
+    }
+  }, []);
+
   const markAsStarted = useCallback(async (taskId: string) => {
     try {
+      stopSound();
       await updateTask(taskId, { status: 'in_progress' });
       setDismissedTasks(prev => new Set(prev).add(taskId));
       setCurrentNotification(null);
     } catch (e) {
       console.log('Error marking task as started:', e);
     }
-  }, [updateTask]);
+  }, [updateTask, stopSound]);
 
   const dismissTask = useCallback((taskId: string) => {
     setDismissedTasks(prev => new Set(prev).add(taskId));
@@ -110,11 +127,12 @@ export function useNotificationChecker() {
 
   const dismissNotification = () => {
     if (currentNotification) {
+      stopSound();
       dismissTask(currentNotification.id);
     }
   };
 
-  return { currentNotification, dismissNotification, markAsStarted, dismissTask };
+  return { currentNotification, dismissNotification, markAsStarted, dismissTask, stopSound };
 }
 
 export function TaskNotificationPopup({ notification, onClose, onStart }: { 
