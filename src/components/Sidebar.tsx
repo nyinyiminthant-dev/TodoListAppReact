@@ -68,23 +68,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 const handleEnableNotifications = async () => {
         try {
             if (!('Notification' in window)) {
-                return;
-            }
-            if (Notification.permission === 'granted') {
-                setNotificationsEnabled(true);
-                new Notification('Test Notification', {
-                    body: 'Notifications are working!',
-                    icon: '/icon-192.png'
-                });
+                alert('Notifications not supported in this browser');
                 return;
             }
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
                 setNotificationsEnabled(true);
-                new Notification('Notifications Enabled!', {
-                    body: 'You will receive reminders for your tasks.',
-                    icon: '/icon-192.png'
-                });
+            } else {
+                alert('Notification permission denied');
             }
         } catch (error) {
             console.error('Failed:', error);

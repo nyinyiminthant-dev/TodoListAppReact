@@ -14,11 +14,11 @@ export default defineConfig({
         name: 'Todo List App',
         short_name: 'TodoList',
         description: 'Task management app with AI planning assistant',
-        theme_color: '#3b82f6',
-        background_color: '#ffffff',
+        theme_color: '#0a0f1a',
+        background_color: '#0a0f1a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/?source=pwa',
         scope: '/',
         categories: ['productivity', 'utilities'],
         icons: [
@@ -39,9 +39,6 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
       },
       devOptions: {
         enabled: true

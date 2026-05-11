@@ -7,7 +7,6 @@ import {
     Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays
 } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
-import { useNotifications } from '../hooks/useNotifications';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Task, Plan, Priority, Category } from '../types';
 import { parseISO, isToday, isTomorrow, isPast, format, isWithinInterval, addDays, setHours, setMinutes, isBefore, differenceInMinutes } from 'date-fns';
@@ -99,7 +98,6 @@ export default function Tasks() {
     const { tasks, plans, addTask, updateTask, deleteTask, updatePlan } = useFirestore();
     const { t } = useLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
-    useNotifications();
 
     const [showForm, setShowForm] = useState(searchParams.get('new') === 'true');
     const [filterPlan, setFilterPlan] = useState<string | null>(searchParams.get('plan'));
