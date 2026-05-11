@@ -40,6 +40,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [languageOpen, setLanguageOpen] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [notificationStatus, setNotificationStatus] = useState<'idle' | 'success' | 'error' | null>(null);
     const [fileInputRef] = useState<HTMLInputElement>(null);
 
     const colorThemes: { id: ColorTheme; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
@@ -73,19 +74,25 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         try {
             const hasPermission = await requestNotificationPermission();
             if (hasPermission) {
-                const token = await getFCMToken();
-                if (token) {
-                    await saveTokenToUser(token);
-                    setNotificationsEnabled(true);
-                }
+                await getFCMToken();
+                await saveTokenToUser('enabled');
+                setNotificationsEnabled(true);
+                setNotificationStatus('success');
             } else {
-                alert('Notification permission denied. Please enable in browser settings.');
+                setNotificationStatus('error');
             }
         } catch (error) {
             console.error('Failed to enable notifications:', error);
-            alert('Failed to enable notifications. Please try again.');
+            setNotificationStatus('error');
         }
     };
+
+    useEffect(() => {
+        if (notificationStatus) {
+            const timer = setTimeout(() => setNotificationStatus(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [notificationStatus]);
 
     const handleExport = () => {
         const json = exportData();
@@ -390,10 +397,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 </button>
                                 <button
                                     onClick={handleEnableNotifications}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all text-sm"
+                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
+                                        notificationStatus === 'success' ? 'bg-emerald-500/20 text-emerald-300' :
+                                        notificationStatus === 'error' ? 'bg-rose-500/20 text-rose-300' :
+                                        notificationsEnabled ? 'bg-emerald-500/20 text-emerald-300' :
+                                        'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
+                                    }`}
                                 >
                                     <Bell className="w-4 h-4" /> 
-                                    {notificationsEnabled ? 'Notifications On' : 'Enable Notifications'}
+                                    {notificationStatus === 'success' ? 'Notifications Enabled!' :
+                                     notificationStatus === 'error' ? 'Enable Failed' :
+                                     notificationsEnabled ? 'Notifications On' : 'Enable Notifications'}
                                 </button>
                                 <input
                                     ref={fileInputRef}
