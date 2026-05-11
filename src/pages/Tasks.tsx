@@ -118,19 +118,9 @@ export default function Tasks() {
     const closeToast = useCallback(() => setToast(null), []);
 
     useEffect(() => {
-        if (searchParams.get('new') === 'true') {
-            setShowForm(true);
-            setSearchParams({}, { replace: true });
-        }
         const planParam = searchParams.get('plan');
         if (planParam) {
             setFilterPlan(planParam);
-        }
-        const taskParam = searchParams.get('task');
-        if (taskParam) {
-            setHighlightedTask(taskParam);
-            setTimeout(() => setHighlightedTask(null), 1500);
-            setSearchParams({}, { replace: true });
         }
     }, [searchParams, setSearchParams]);
 
@@ -149,6 +139,7 @@ export default function Tasks() {
         setTimeout(() => {
             setShowForm(false);
             setIsClosing(false);
+            setSearchParams({});
             resetForm();
         }, 200);
     };
@@ -606,10 +597,14 @@ export default function Tasks() {
                             )}
 
                             {/* Dates */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startDate')}</label>
                                     <input type="date" className="input" value={formData.startDate} onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))} />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startTime')}</label>
+                                    <input type="time" className="input" value={formData.startTime} onChange={e => setFormData(f => ({ ...f, startTime: e.target.value }))} />
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueDate')}</label>
@@ -619,12 +614,6 @@ export default function Tasks() {
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueTime')}</label>
                                     <input type="time" className="input" value={formData.dueTime} onChange={e => setFormData(f => ({ ...f, dueTime: e.target.value }))} />
                                 </div>
-                            </div>
-
-                            {/* Start Time - separate row */}
-                            <div>
-                                <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startTime')}</label>
-                                <input type="time" className="input" value={formData.startTime} onChange={e => setFormData(f => ({ ...f, startTime: e.target.value }))} />
                             </div>
 
                             {/* Recurring */}
