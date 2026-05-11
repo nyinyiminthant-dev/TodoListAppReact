@@ -35,7 +35,7 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const promptInstall = () => {
+  const showDialog = () => {
     if (isInstalled) return;
     setShowInstallDialog(true);
   };
@@ -61,5 +61,5 @@ export function usePWAInstall() {
     setShowInstallDialog(false);
   };
 
-  return { showInstallDialog, isInstalled, promptInstall, dismissDialog, confirmInstall };
+  return { showInstallDialog, isInstalled, showDialog, dismissDialog, confirmInstall };
 }

@@ -32,7 +32,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { exportData, importData, clearAllData } = useFirestore();
     const { mode, colorTheme, setMode, setColorTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
-    const { promptInstall } = usePWAInstall();
+    const { showDialog, isInstalled } = usePWAInstall();
     const navigate = useNavigate();
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -354,7 +354,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     <Trash2 className="w-4 h-4" /> {t('clearAllData')}
                                 </button>
 <button
-                                    onClick={promptInstall}
+                                    onClick={showDialog}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
                                 >
                                     <Sparkles className="w-4 h-4" /> Install App
