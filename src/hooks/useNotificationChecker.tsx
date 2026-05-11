@@ -14,19 +14,45 @@ export function useNotificationChecker() {
   const [currentNotification, setCurrentNotification] = useState<TaskNotification | null>(null);
   const [dismissedTasks, setDismissedTasks] = useState<Set<string>>(new Set());
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const notifiedRef = useRef<Set<string>>(new Set());
+
+  const requestPermission = useCallback(async () => {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    const perm = await Notification.requestPermission();
+    return perm === 'granted';
+  }, []);
 
   const playSound = useCallback(async () => {
     try {
+      requestPermission();
       const audio = new Audio();
       audio.src = 'https://www.soundjay.com/buttons/sounds/button-09a.mp3';
       audio.volume = 1.0;
-      await audio.play();
+      audio.play();
       currentAudioRef.current = audio;
     } catch (e) {
       console.log('Sound error:', e);
     }
-  }, []);
+  }, [requestPermission]);
+
+  const showBrowserNotification = useCallback(async (task: TaskNotification) => {
+    try {
+      const hasPerm = await requestPermission();
+      if (!hasPerm) return;
+      
+      new Notification(task.type === 'start' ? 'Time to Start' : 'Due Now', {
+        body: task.title,
+        icon: '/icon-192.png',
+        tag: `task-${task.id}`,
+        requireInteraction: true,
+        vibrate: [200, 100, 200, 100, 200],
+      });
+    } catch (e) {
+      console.log('Browser notification error:', e);
+    }
+  }, [requestPermission]);
 
   const stopSound = useCallback(() => {
     if (currentAudioRef.current) {
@@ -62,12 +88,18 @@ export function useNotificationChecker() {
   }, []);
 
   useEffect(() => {
+    requestPermission();
+    
     const checkNotifications = () => {
       const now = new Date();
+      const todayStr = now.toDateString();
       
       for (const task of tasks) {
         if (task.status === 'completed') continue;
         if (dismissedTasks.has(task.id)) continue;
+        
+        const key = `${task.id}-${task.type}-${todayStr}`;
+        if (notifiedRef.current.has(key)) continue;
 
         if (task.startDate && task.startTime) {
           const startDateParsed = parseISO(task.startDate);
@@ -75,7 +107,9 @@ export function useNotificationChecker() {
             const [hours, minutes] = task.startTime.split(':').map(Number);
             const startDateTime = setMinutes(setHours(startDateParsed, hours), minutes);
             if (differenceInMinutes(startDateTime, now) === 0) {
+              notifiedRef.current.add(key);
               playSound();
+              showBrowserNotification({ id: task.id, title: task.title, type: 'start' });
               setCurrentNotification({ id: task.id, title: task.title, type: 'start' });
               return;
             }
@@ -88,7 +122,9 @@ export function useNotificationChecker() {
             const [hours, minutes] = task.dueTime.split(':').map(Number);
             const dueDateTime = setMinutes(setHours(dueDateParsed, hours), minutes);
             if (differenceInMinutes(dueDateTime, now) === 0) {
+              notifiedRef.current.add(key);
               playSound();
+              showBrowserNotification({ id: task.id, title: task.title, type: 'due' });
               setCurrentNotification({ id: task.id, title: task.title, type: 'due' });
               return;
             }
@@ -97,11 +133,11 @@ export function useNotificationChecker() {
       }
     };
 
-    const interval = setInterval(checkNotifications, 30000);
+    const interval = setInterval(checkNotifications, 10000);
     checkNotifications();
 
     return () => clearInterval(interval);
-  }, [tasks, playSound, dismissedTasks]);
+  }, [tasks, playSound, dismissedTasks, showBrowserNotification, requestPermission]);
 
   const dismissNotification = () => {
     if (currentNotification) {
