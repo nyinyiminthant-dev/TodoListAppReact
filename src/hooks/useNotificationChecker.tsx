@@ -15,6 +15,7 @@ export function useNotificationChecker() {
   const [dismissedTasks, setDismissedTasks] = useState<Set<string>>(new Set());
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const notifiedRef = useRef<Set<string>>(new Set());
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const requestPermission = useCallback(async () => {
     if (!('Notification' in window)) return false;
@@ -24,18 +25,39 @@ export function useNotificationChecker() {
     return perm === 'granted';
   }, []);
 
+  const vibrate = useCallback(() => {
+    if ('vibrate' in navigator) {
+      navigator.vibrate([300, 150, 300, 150, 500]);
+    }
+  }, []);
+
   const playSound = useCallback(async () => {
     try {
-      requestPermission();
-      const audio = new Audio();
-      audio.src = 'https://www.soundjay.com/buttons/sounds/button-09a.mp3';
-      audio.volume = 1.0;
-      audio.play();
-      currentAudioRef.current = audio;
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      
+      const response = await fetch('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = 2.5;
+      
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      source.start(0);
     } catch (e) {
       console.log('Sound error:', e);
     }
-  }, [requestPermission]);
+  }, []);
 
   const showBrowserNotification = useCallback(async (task: TaskNotification) => {
     try {
@@ -47,7 +69,7 @@ export function useNotificationChecker() {
         icon: '/icon-192.png',
         tag: `task-${task.id}`,
         requireInteraction: true,
-        vibrate: [200, 100, 200, 100, 200],
+        vibrate: [300, 150, 300, 150, 500],
       });
     } catch (e) {
       console.log('Browser notification error:', e);
@@ -108,6 +130,7 @@ export function useNotificationChecker() {
             const startDateTime = setMinutes(setHours(startDateParsed, hours), minutes);
             if (differenceInMinutes(startDateTime, now) === 0) {
               notifiedRef.current.add(key);
+              vibrate();
               playSound();
               showBrowserNotification({ id: task.id, title: task.title, type: 'start' });
               setCurrentNotification({ id: task.id, title: task.title, type: 'start' });
@@ -123,6 +146,7 @@ export function useNotificationChecker() {
             const dueDateTime = setMinutes(setHours(dueDateParsed, hours), minutes);
             if (differenceInMinutes(dueDateTime, now) === 0) {
               notifiedRef.current.add(key);
+              vibrate();
               playSound();
               showBrowserNotification({ id: task.id, title: task.title, type: 'due' });
               setCurrentNotification({ id: task.id, title: task.title, type: 'due' });
@@ -137,7 +161,7 @@ export function useNotificationChecker() {
     checkNotifications();
 
     return () => clearInterval(interval);
-  }, [tasks, playSound, dismissedTasks, showBrowserNotification, requestPermission]);
+  }, [tasks, playSound, dismissedTasks, showBrowserNotification, requestPermission, vibrate]);
 
   const dismissNotification = () => {
     if (currentNotification) {
