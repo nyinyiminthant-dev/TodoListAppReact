@@ -1,24 +1,17 @@
-import { useEffect } from 'react';
 import { X, Sparkles } from 'lucide-react';
-import { usePWAInstall, triggerInstallDialog } from '../hooks/usePWAInstall';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
-function InstallPWAComponent() {
-  const { showInstallDialog, showDialog, dismissDialog, triggerInstall } = usePWAInstall();
+export default function InstallPWA() {
+  const { showDialog, canInstall, show, hide, install } = usePWAInstall();
 
-  useEffect(() => {
-    const handler = () => showDialog();
-    window.addEventListener('showInstallDialog', handler);
-    return () => window.removeEventListener('showInstallDialog', handler);
-  }, [showDialog]);
-
-  if (!showInstallDialog) return null;
+  if (!showDialog) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={dismissDialog} />
+      <div className="absolute inset-0 bg-black/50" onClick={hide} />
       <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm">
         <button
-          onClick={dismissDialog}
+          onClick={hide}
           className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
         >
           <X className="w-5 h-5 text-gray-500" />
@@ -34,15 +27,13 @@ function InstallPWAComponent() {
             Add to home screen for quick access
           </p>
           <button
-            onClick={triggerInstall}
+            onClick={install}
             className="w-full py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
           >
-            Install
+            Install Now
           </button>
         </div>
       </div>
     </div>
   );
 }
-
-export default InstallPWAComponent;

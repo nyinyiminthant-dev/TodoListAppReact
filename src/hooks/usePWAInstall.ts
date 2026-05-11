@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -8,68 +8,45 @@ interface BeforeInstallPromptEvent extends Event {
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
 export function usePWAInstall() {
-  const [showInstallDialog, setShowInstallDialog] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
 
-  useEffect(() => {
-    if (window.matchMedia('(display-mode: standalone)').matches || 
-        (window.navigator as any).standalone === true) {
-      setIsInstalled(true);
-    }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e as BeforeInstallPromptEvent;
       setCanInstall(true);
-    };
-
-    const handleAppInstalled = () => {
+    });
+    
+    window.addEventListener('appinstalled', () => {
       setIsInstalled(true);
       setCanInstall(false);
-      setShowInstallDialog(false);
-    };
+    });
+    
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+  }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
+  const show = useCallback(() => {
+    setShowDialog(true);
   }, []);
 
-  const triggerInstall = useCallback(async () => {
-    if (isInstalled) {
-      return;
-    }
+  const hide = useCallback(() => {
+    setShowDialog(false);
+  }, []);
 
+  const install = useCallback(async () => {
     if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          setIsInstalled(true);
-        }
-      } catch (e) {
-        console.error('Install failed:', e);
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
       }
-    } else {
-      setShowInstallDialog(true);
     }
-  }, [isInstalled]);
-
-  const showDialog = useCallback(() => {
-    setShowInstallDialog(true);
+    setShowDialog(false);
   }, []);
 
-  const dismissDialog = useCallback(() => {
-    setShowInstallDialog(false);
-  }, []);
-
-  return { showInstallDialog, isInstalled, canInstall, showDialog, dismissDialog, triggerInstall };
+  return { showDialog, isInstalled, canInstall, show, hide, install };
 }
-
-export const triggerInstallDialog = () => {
-  window.dispatchEvent(new CustomEvent('showInstallDialog'));
-};
