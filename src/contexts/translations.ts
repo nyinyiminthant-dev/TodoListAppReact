@@ -151,13 +151,11 @@ export const translations = {
     light: 'Light',
     colorTheme: 'Color Theme',
     settings: 'Settings',
-    exportData: 'Export Data',
+exportData: 'Export Data',
     importData: 'Import Data',
     clearAllData: 'Clear All Data',
-    signOut: 'Sign Out',
-    language: 'Language',
-    english: 'English',
-    burmese: 'Burmese',
+    enableNotifications: 'Enable Notifications',
+    notificationsOn: 'Notifications On',
 
     // Common
     user: 'User',
@@ -314,13 +312,11 @@ export const translations = {
     light: 'အလင်း',
     colorTheme: 'အရောင် Theme',
     settings: 'ဆက်တင်များ',
-    exportData: 'ဒေတာထုတ်ယူ',
+exportData: 'ဒေတာထုတ်ယူ',
     importData: 'ဒေတာထည့်သွင်း',
     clearAllData: 'ဒေတာအားလုံးဖျက်',
-    signOut: 'ထွက်မည်',
-    language: 'ဘာသာစကား',
-    english: 'English',
-    burmese: 'မြန်မာ',
+    enableNotifications: 'အသိမ်းအန်ာဖွင့်',
+    notificationsOn: 'အသိမ်းအန်ာဖွင့်ပါပါး',
 
     // Common
     user: 'အသုံးပြုသူ',

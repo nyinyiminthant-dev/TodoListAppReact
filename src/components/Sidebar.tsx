@@ -5,13 +5,14 @@ import {
     LayoutDashboard, CheckSquare, BarChart3, Target, Sparkles,
     Settings, LogOut, ChevronDown, Download, Upload, Trash2, Menu, X,
     Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, Waves, Sunset,
-    Globe
+    Globe, Bell
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useTheme, ColorTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { requestNotificationPermission, getFCMToken, saveTokenToUser } from '../utils/firebaseMessaging';
 import { Language } from '../contexts/LanguageContext';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -38,7 +39,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [appearanceOpen, setAppearanceOpen] = useState(false);
     const [languageOpen, setLanguageOpen] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [fileInputRef] = useState<HTMLInputElement>(null);
 
     const colorThemes: { id: ColorTheme; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
         { id: 'default', label: 'Default', color: '#6366f1', Icon: Sparkles },
@@ -57,6 +59,33 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
     }, [setIsOpen]);
+
+    useEffect(() => {
+        const checkNotificationPermission = async () => {
+            if ('Notification' in window) {
+                setNotificationsEnabled(Notification.permission === 'granted');
+            }
+        };
+        checkNotificationPermission();
+    }, []);
+
+    const handleEnableNotifications = async () => {
+        try {
+            const hasPermission = await requestNotificationPermission();
+            if (hasPermission) {
+                const token = await getFCMToken();
+                if (token) {
+                    await saveTokenToUser(token);
+                    setNotificationsEnabled(true);
+                }
+            } else {
+                alert('Notification permission denied. Please enable in browser settings.');
+            }
+        } catch (error) {
+            console.error('Failed to enable notifications:', error);
+            alert('Failed to enable notifications. Please try again.');
+        }
+    };
 
     const handleExport = () => {
         const json = exportData();
@@ -358,6 +387,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
                                 >
                                     <Sparkles className="w-4 h-4" /> Install App
+                                </button>
+                                <button
+                                    onClick={handleEnableNotifications}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all text-sm"
+                                >
+                                    <Bell className="w-4 h-4" /> 
+                                    {notificationsEnabled ? 'Notifications On' : 'Enable Notifications'}
                                 </button>
                                 <input
                                     ref={fileInputRef}
