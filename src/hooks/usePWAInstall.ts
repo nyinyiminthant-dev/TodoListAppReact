@@ -6,11 +6,11 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
-let showDialogState = false;
-let listeners: ((show: boolean) => void)[] = [];
+let dialogState = false;
+let listeners: (() => boolean)[] = [];
 
 export function usePWAInstall() {
-  const [showInstallDialog, setShowInstallDialog] = useState(showDialogState);
+  const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
@@ -22,60 +22,61 @@ export function usePWAInstall() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       deferredPrompt = e as BeforeInstallPromptEvent;
+      // Auto-show dialog when browser is ready to install
+      if (!dialogState && !isInstalled) {
+        setTimeout(() => setShowInstallDialog(true), 100);
+      }
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
-      showDialogState = false;
-      listeners.forEach(fn => fn(false));
+      setShowInstallDialog(false);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    listeners.push(setShowInstallDialog);
+    setShowInstallDialog(dialogState);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
-      listeners = listeners.filter(fn => fn !== setShowInstallDialog);
     };
-  }, []);
+  }, [isInstalled]);
 
   const showDialog = () => {
-    if (isInstalled) return;
-    showDialogState = true;
+    dialogState = true;
     setShowInstallDialog(true);
-    listeners.forEach(fn => fn(true));
   };
 
   const dismissDialog = () => {
-    showDialogState = false;
+    dialogState = false;
     setShowInstallDialog(false);
-    listeners.forEach(fn => fn(false));
   };
 
   const confirmInstall = async () => {
-    if (deferredPrompt) {
-      try {
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          setIsInstalled(true);
-        }
-      } catch (e) {
-        console.error('Install failed:', e);
-      }
+    dialogState = false;
+    
+    if (!deferredPrompt) {
+      setShowInstallDialog(false);
+      return;
     }
-    showDialogState = false;
+
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+      }
+    } catch (e) {
+      console.error('Install failed:', e);
+    }
     setShowInstallDialog(false);
-    listeners.forEach(fn => fn(false));
   };
 
   return { showInstallDialog, isInstalled, showDialog, dismissDialog, confirmInstall };
 }
 
 export function triggerInstallDialog() {
-  showDialogState = true;
-  listeners.forEach(fn => fn(true));
+  dialogState = true;
 }

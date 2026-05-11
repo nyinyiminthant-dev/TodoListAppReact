@@ -2,7 +2,7 @@ import { X, Sparkles } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function InstallPWA() {
-  const { showInstallDialog, dismissDialog, confirmInstall } = usePWAInstall();
+  const { showInstallDialog, dismissDialog, confirmInstall, canInstall, isInstalled } = usePWAInstall();
 
   if (!showInstallDialog) return null;
 
@@ -21,17 +21,19 @@ export default function InstallPWA() {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Install TodoList Pro
+            {isInstalled ? 'Already Installed' : 'Install TodoList Pro'}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Add to home screen for quick access and offline use
+            {isInstalled ? 'App is already on your home screen' : 'Add to home screen for quick access'}
           </p>
-          <button
-            onClick={confirmInstall}
-            className="w-full py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
-          >
-            Install
-          </button>
+          {!isInstalled && (
+            <button
+              onClick={confirmInstall}
+              className="w-full py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+            >
+              Install Now
+            </button>
+          )}
         </div>
       </div>
     </div>
