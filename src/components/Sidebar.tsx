@@ -4,13 +4,14 @@ import { AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, CheckSquare, BarChart3, Target, Sparkles,
     Settings, LogOut, ChevronDown, Download, Upload, Trash2, Menu, X,
-    Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, ShoppingBag, CalendarDays, Waves, Sunset,
+    Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, DownloadCloud, Waves, Sunset,
     Globe
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useTheme, ColorTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 import { Language } from '../contexts/LanguageContext';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -31,6 +32,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { exportData, importData, clearAllData } = useFirestore();
     const { mode, colorTheme, setMode, setColorTheme } = useTheme();
     const { language, setLanguage, t } = useLanguage();
+    const { isInstallable, install } = usePWAInstall();
     const navigate = useNavigate();
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -351,6 +353,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 >
                                     <Trash2 className="w-4 h-4" /> {t('clearAllData')}
                                 </button>
+                                {isInstallable && (
+                                    <button
+                                        onClick={install}
+                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
+                                    >
+                                        <DownloadCloud className="w-4 h-4" /> Install App
+                                    </button>
+                                )}
                                 <input
                                     ref={fileInputRef}
                                     type="file"
