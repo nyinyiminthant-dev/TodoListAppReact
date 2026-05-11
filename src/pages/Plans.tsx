@@ -275,6 +275,7 @@ export default function Plans() {
                     dueDate: task.dueDate,
                     dueTime: task.dueTime || '',
                     startDate: task.startDate || null,
+                    startTime: task.startTime || '',
                     recurring: 'none',
                     planId: aiTaskModal.plan.id,
                     userId: '',

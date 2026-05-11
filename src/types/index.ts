@@ -14,6 +14,7 @@ export interface Task {
   dueDate: string;
   dueTime: string;
   startDate: string | null;
+  startTime: string;
   recurring: Recurring;
   createdAt: string;
   completedAt: string | null;

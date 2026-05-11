@@ -37,6 +37,7 @@ const emptyForm = {
     dueDate: '',
     dueTime: '',
     startDate: '',
+    startTime: '',
     recurring: 'none' as Task['recurring'],
     planId: null as string | null,
 };
@@ -145,6 +146,7 @@ export default function Tasks() {
             dueDate: task.dueDate,
             dueTime: task.dueTime,
             startDate: task.startDate ?? '',
+            startTime: task.startTime ?? '',
             recurring: task.recurring,
             planId: task.planId ?? null,
         });
@@ -590,6 +592,12 @@ export default function Tasks() {
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueTime')}</label>
                                     <input type="time" className="input" value={formData.dueTime} onChange={e => setFormData(f => ({ ...f, dueTime: e.target.value }))} />
                                 </div>
+                            </div>
+
+                            {/* Start Time - separate row */}
+                            <div>
+                                <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startTime')}</label>
+                                <input type="time" className="input" value={formData.startTime} onChange={e => setFormData(f => ({ ...f, startTime: e.target.value }))} />
                             </div>
 
                             {/* Recurring */}

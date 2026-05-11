@@ -113,6 +113,7 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
           dueDate: task.dueDate,
           dueTime: task.dueTime || '',
           startDate: task.startDate || null,
+          startTime: task.startTime || '',
           recurring: 'none',
           planId: null,
           userId: '',

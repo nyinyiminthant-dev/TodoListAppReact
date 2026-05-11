@@ -35,6 +35,7 @@ export interface GeneratedTask {
   title: string;
   description: string;
   startDate: string;
+  startTime: string;
   priority: 'high' | 'medium' | 'low';
   dueDate: string;
   dueTime: string;
@@ -164,6 +165,7 @@ Respond ONLY with valid JSON array in this exact format, no markdown or explanat
     "title": "specific action item (max 60 chars)",
     "description": "brief detail about this task (max 100 chars)",
     "startDate": "YYYY-MM-DD",
+    "startTime": "HH:MM or empty string",
     "priority": "high|medium|low",
     "dueDate": "YYYY-MM-DD",
     "dueTime": "HH:MM or empty string",
@@ -177,7 +179,7 @@ Rules:
 - All startDate and dueDate values must be between ${todayStr} and ${targetDate} (inclusive)
 - Distribute tasks evenly across the timeline
 - Mix priorities realistically (more medium/low than high)
-- dueTime should be empty string (not "00:00")
+- dueTime and startTime should be empty string (not "00:00")
 - Include relevant category based on the goal
 - ${langInstruction}`;
 
@@ -237,6 +239,7 @@ Rules:
         title: task.title || `${planTitle} - Task`,
         description: task.description || `${planTitle} - Step ${tasks.indexOf(task) + 1}`,
         startDate,
+        startTime: task.startTime === '00:00' ? '' : (task.startTime || ''),
         dueDate,
         dueTime: task.dueTime === '00:00' ? '' : (task.dueTime || ''),
       };
