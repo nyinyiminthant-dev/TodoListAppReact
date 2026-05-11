@@ -1,16 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-let showDialogFn: (() => void) | null = null;
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
+let showDialogState = false;
+let listeners: ((show: boolean) => void)[] = [];
 
 export function usePWAInstall() {
-  const [showInstallDialog, setShowInstallDialog] = useState(false);
+  const [showInstallDialog, setShowInstallDialog] = useState(showDialogState);
   const [isInstalled, setIsInstalled] = useState(false);
-  const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches || 
@@ -20,42 +21,45 @@ export function usePWAInstall() {
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      promptRef.current = e as BeforeInstallPromptEvent;
+      deferredPrompt = e as BeforeInstallPromptEvent;
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
-      setShowInstallDialog(false);
+      showDialogState = false;
+      listeners.forEach(fn => fn(false));
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    showDialogFn = () => setShowInstallDialog(true);
+    listeners.push(setShowInstallDialog);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
-      showDialogFn = null;
+      listeners = listeners.filter(fn => fn !== setShowInstallDialog);
     };
   }, []);
 
   const showDialog = () => {
     if (isInstalled) return;
+    showDialogState = true;
     setShowInstallDialog(true);
+    listeners.forEach(fn => fn(true));
   };
 
   const dismissDialog = () => {
+    showDialogState = false;
     setShowInstallDialog(false);
+    listeners.forEach(fn => fn(false));
   };
 
   const confirmInstall = async () => {
-    const prompt = promptRef.current;
-
-    if (prompt) {
+    if (deferredPrompt) {
       try {
-        await prompt.prompt();
-        const { outcome } = await prompt.userChoice;
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
           setIsInstalled(true);
         }
@@ -63,12 +67,15 @@ export function usePWAInstall() {
         console.error('Install failed:', e);
       }
     }
+    showDialogState = false;
     setShowInstallDialog(false);
+    listeners.forEach(fn => fn(false));
   };
 
   return { showInstallDialog, isInstalled, showDialog, dismissDialog, confirmInstall };
 }
 
 export function triggerInstallDialog() {
-  if (showDialogFn) showDialogFn();
+  showDialogState = true;
+  listeners.forEach(fn => fn(true));
 }
