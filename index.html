@@ -22,6 +22,16 @@
     </style>
   </head>
   <body>
+    <script>
+      window.pwaDeferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.pwaDeferredPrompt = e;
+      });
+      window.addEventListener('appinstalled', () => {
+        window.pwaDeferredPrompt = null;
+      });
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

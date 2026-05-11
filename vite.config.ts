@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'skipWaiting',
+      registerType: 'autoUpdate',
       includeAssets: ['icon-192.png', 'icon-512.png', 'maskable-icon.png', 'favicon.svg'],
       manifest: {
         name: 'Todo List App',
@@ -41,11 +41,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
-        navigateFallback: '/'
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
       },
       devOptions: {
-        enabled: false
+        enabled: true
       }
     })
   ],
