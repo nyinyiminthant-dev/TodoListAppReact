@@ -9,6 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['icon-192.png', 'icon-512.png', 'maskable-icon.png', 'favicon.svg'],
       manifest: {
         name: 'Todo List App',
         short_name: 'TodoList',
@@ -19,6 +20,7 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         scope: '/',
+        categories: ['productivity', 'utilities'],
         icons: [
           {
             src: '/icon-192.png',
@@ -39,7 +41,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
+      },
+      devOptions: {
+        enabled: true
       }
     })
   ],

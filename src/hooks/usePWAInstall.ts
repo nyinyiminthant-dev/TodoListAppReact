@@ -11,27 +11,24 @@ export function usePWAInstall() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    console.log('PWA hook mounted');
     const checkInstalled = () => {
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as any).standalone === true) {
-        console.log('Already installed');
         setIsInstalled(true);
       }
     };
     checkInstalled();
 
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('beforeinstallprompt fired', e);
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
     const handleAppInstalled = () => {
-      console.log('App installed');
       setIsInstalled(true);
       setDeferredPrompt(null);
+      setIsInstallable(false);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -44,22 +41,58 @@ export function usePWAInstall() {
   }, []);
 
   const install = async () => {
-    console.log('Install clicked, deferredPrompt:', deferredPrompt);
-    if (!deferredPrompt) {
-      console.log('No deferred prompt - checking if already installed:', isInstalled);
-      // Try alternative - open Add to Home Screen through navigator
-      if ('standalone' in window.navigator) {
-        console.log('Already standalone mode');
-      }
+    console.log('Install clicked, deferredPrompt:', deferredPrompt, 'isInstallable:', isInstallable);
+    
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone === true) {
+      alert('App is already installed!');
       return;
     }
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log('Install outcome:', outcome);
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
+
+    // If we have deferred prompt, use it
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+      }
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+      return;
     }
-    setDeferredPrompt(null);
+
+    // Fallback: Try to check navigator.standalone directly
+    const isCapable = !!(window.navigator as any).standalone || 
+                   !!(window.matchMedia('(display-mode: standalone)').matches);
+    
+    // Direct prompt attempt - works on some browsers
+    try {
+      const p = (window as any).beforeInstallPrompt;
+      if (p) {
+        await p.prompt();
+        const { outcome } = await p.userChoice;
+        if (outcome === 'accepted') {
+          setIsInstalled(true);
+        }
+        return;
+      }
+    } catch (e) {
+      console.log('Direct prompt failed:', e);
+    }
+
+    // Show instructions
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('chrome') && !ua.includes('edg')) {
+      // Chrome on desktop
+      alert('In Chrome: Click the install icon in the address bar (right side of URL)');
+    } else if (ua.includes('safari')) {
+      alert('In Safari iOS: Tap Share button → Add to Home Screen');
+    } else if (ua.includes('firefox')) {
+      alert('In Firefox: Click the install icon in address bar or menu → Add Page → Homescreen');
+    } else {
+      alert('To install this app:\n1. Open browser menu\n2. Find "Add to Home Screen" or "Install App" option');
+    }
   };
 
   const dismiss = () => {

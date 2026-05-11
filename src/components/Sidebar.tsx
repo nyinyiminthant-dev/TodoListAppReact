@@ -362,7 +362,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     </button>
                                 )*/}
                                 <button
-                                    onClick={() => install()}
+                                    onClick={() => {
+                                        if (deferredPrompt) {
+                                            install();
+                                        } else {
+                                            // Fallback - show instructions
+                                            alert('To install: Open browser menu → Add to Home Screen');
+                                        }
+                                    }}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
                                 >
                                     <DownloadCloud className="w-4 h-4" /> Install App
