@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard, CheckSquare, BarChart3, Target, Sparkles,
     Settings, LogOut, ChevronDown, Download, Upload, Trash2, Menu, X,
-    Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, DownloadCloud, Waves, Sunset,
+    Sun, Moon, Palette, BookOpen, Briefcase, HeartPulse, Waves, Sunset,
     Globe
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -353,26 +353,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 >
                                     <Trash2 className="w-4 h-4" /> {t('clearAllData')}
                                 </button>
-                                {/*isInstallable && (
-                                    <button
-                                        onClick={install}
-                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
-                                    >
-                                        <DownloadCloud className="w-4 h-4" /> Install App
-                                    </button>
-                                )*/}
                                 <button
-                                    onClick={() => {
-                                        if (deferredPrompt) {
-                                            install();
-                                        } else {
-                                            // Fallback - show instructions
-                                            alert('To install: Open browser menu → Add to Home Screen');
-                                        }
-                                    }}
+                                    onClick={() => install()}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
                                 >
-                                    <DownloadCloud className="w-4 h-4" /> Install App
+                                    <Sparkles className="w-4 h-4" /> Install App
                                 </button>
                                 <input
                                     ref={fileInputRef}
