@@ -3,7 +3,7 @@ import { X, Sparkles } from 'lucide-react';
 import { usePWAInstall, triggerInstallDialog } from '../hooks/usePWAInstall';
 
 function InstallPWAComponent() {
-  const { showInstallDialog, isInstalled, showDialog, dismissDialog, confirmInstall } = usePWAInstall();
+  const { showInstallDialog, isInstalled, canInstall, showDialog, dismissDialog, triggerInstall } = usePWAInstall();
 
   useEffect(() => {
     const handler = () => showDialog();
@@ -34,7 +34,7 @@ function InstallPWAComponent() {
             Add to home screen for quick access
           </p>
           <button
-            onClick={confirmInstall}
+            onClick={triggerInstall}
             className="w-full py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
           >
             Install

@@ -10,6 +10,7 @@ let deferredPrompt: BeforeInstallPromptEvent | null = null;
 export function usePWAInstall() {
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [canInstall, setCanInstall] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches || 
@@ -20,10 +21,12 @@ export function usePWAInstall() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       deferredPrompt = e as BeforeInstallPromptEvent;
+      setCanInstall(true);
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
+      setCanInstall(false);
       setShowInstallDialog(false);
     };
 
@@ -36,17 +39,11 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const showDialog = useCallback(() => {
-    setShowInstallDialog(true);
-  }, []);
+  const triggerInstall = useCallback(async () => {
+    if (isInstalled) {
+      return;
+    }
 
-  const dismissDialog = useCallback(() => {
-    setShowInstallDialog(false);
-  }, []);
-
-  const confirmInstall = useCallback(async () => {
-    setShowInstallDialog(false);
-    
     if (deferredPrompt) {
       try {
         await deferredPrompt.prompt();
@@ -57,10 +54,20 @@ export function usePWAInstall() {
       } catch (e) {
         console.error('Install failed:', e);
       }
+    } else {
+      setShowInstallDialog(true);
     }
+  }, [isInstalled]);
+
+  const showDialog = useCallback(() => {
+    setShowInstallDialog(true);
   }, []);
 
-  return { showInstallDialog, isInstalled, showDialog, dismissDialog, confirmInstall };
+  const dismissDialog = useCallback(() => {
+    setShowInstallDialog(false);
+  }, []);
+
+  return { showInstallDialog, isInstalled, canInstall, showDialog, dismissDialog, triggerInstall };
 }
 
 export const triggerInstallDialog = () => {
