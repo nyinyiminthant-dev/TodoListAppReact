@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useFirestore } from '../contexts/FirestoreContext';
-import { parseISO, isToday, isBefore, isAfter, differenceInMinutes, setHours, setMinutes } from 'date-fns';
+import { parseISO, isToday, isBefore, differenceInMinutes, setHours, setMinutes } from 'date-fns';
 
 export function useNotifications() {
   const { tasks } = useFirestore();
@@ -55,8 +55,11 @@ export function useNotifications() {
       const startDateTime = setMinutes(setHours(startDate, hours), minutes);
       const diff = differenceInMinutes(startDateTime, now);
       
-      if (diff <= 5 && diff >= -5) {
-        return diff <= 0 ? 'now' : `in ${diff} minutes`;
+      if (diff <= 5 && diff >= -1) {
+        if (diff <= 0) return 'now';
+        if (diff === 5) return 'in 5 minutes';
+        if (diff === 1) return 'in 1 minute';
+        return `in ${diff} minutes`;
       }
     }
     return null;
@@ -73,8 +76,11 @@ export function useNotifications() {
       const dueDateTime = setMinutes(setHours(dueDate, hours), minutes);
       const diff = differenceInMinutes(dueDateTime, now);
       
-      if (diff <= 15 && diff >= -5) {
-        return diff <= 0 ? 'now' : `in ${diff} minutes`;
+      if (diff <= 5 && diff >= -1) {
+        if (diff <= 0) return 'now';
+        if (diff === 5) return 'in 5 minutes';
+        if (diff === 1) return 'in 1 minute';
+        return `in ${diff} minutes`;
       }
     }
     return null;

@@ -176,6 +176,16 @@ export default function Tasks() {
         e.preventDefault();
         if (!formData.title.trim()) return;
 
+        if (formData.dueTime && !formData.dueDate) {
+            setToast({ type: 'error', message: 'Please enter due date when setting due time' });
+            return;
+        }
+
+        if (formData.startTime && !formData.startDate) {
+            setToast({ type: 'error', message: 'Please enter start date when setting start time' });
+            return;
+        }
+
         setSubmitting(true);
         setToast({ type: 'loading', message: editingTask ? 'Saving changes…' : 'Adding task…' });
 
