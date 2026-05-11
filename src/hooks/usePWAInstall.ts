@@ -5,6 +5,8 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+let showDialogFn: (() => void) | null = null;
+
 export function usePWAInstall() {
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -29,9 +31,12 @@ export function usePWAInstall() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    showDialogFn = () => setShowInstallDialog(true);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      showDialogFn = null;
     };
   }, []);
 
@@ -62,4 +67,8 @@ export function usePWAInstall() {
   };
 
   return { showInstallDialog, isInstalled, showDialog, dismissDialog, confirmInstall };
+}
+
+export function triggerInstallDialog() {
+  if (showDialogFn) showDialogFn();
 }
