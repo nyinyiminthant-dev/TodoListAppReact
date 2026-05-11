@@ -8,14 +8,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'skipWaiting',
       includeAssets: ['icon-192.png', 'icon-512.png', 'maskable-icon.png', 'favicon.svg'],
       manifest: {
-        name: 'TodoList Pro',
+        name: 'Todo List App',
         short_name: 'TodoList',
         description: 'Task management app with AI planning assistant',
-        theme_color: '#0a0f1a',
-        background_color: '#0a0f1a',
+        theme_color: '#3b82f6',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
@@ -45,7 +45,7 @@ export default defineConfig({
         navigateFallback: '/'
       },
       devOptions: {
-        enabled: true
+        enabled: false
       }
     })
   ],
