@@ -9,7 +9,7 @@ import {
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Task, Plan, Priority, Category } from '../types';
-import { parseISO, isToday, isTomorrow, isPast, format, isWithinInterval, addDays, setHours, setMinutes, isBefore, differenceInMinutes } from 'date-fns';
+import { parseISO, isToday, isTomorrow, isPast, format, isWithinInterval, addDays, addMonths, addYears, setHours, setMinutes, isBefore, differenceInMinutes } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -205,6 +205,54 @@ export default function Tasks() {
             status: next,
             completedAt: next === 'completed' ? new Date().toISOString() : null,
         });
+
+        if (next === 'completed' && task.recurring !== 'none') {
+            let newDueDate = '';
+            let newStartDate = task.startDate || '';
+            
+            if (task.dueDate) {
+                const dueDateObj = parseISO(task.dueDate);
+                if (task.recurring === 'daily') {
+                    newDueDate = format(addDays(dueDateObj, 1), 'yyyy-MM-dd');
+                } else if (task.recurring === 'weekly') {
+                    newDueDate = format(addDays(dueDateObj, 7), 'yyyy-MM-dd');
+                } else if (task.recurring === 'monthly') {
+                    newDueDate = format(addMonths(dueDateObj, 1), 'yyyy-MM-dd');
+                } else if (task.recurring === 'yearly') {
+                    newDueDate = format(addYears(dueDateObj, 1), 'yyyy-MM-dd');
+                }
+            }
+            
+            if (task.startDate) {
+                const startDateObj = parseISO(task.startDate);
+                if (task.recurring === 'daily') {
+                    newStartDate = format(addDays(startDateObj, 1), 'yyyy-MM-dd');
+                } else if (task.recurring === 'weekly') {
+                    newStartDate = format(addDays(startDateObj, 7), 'yyyy-MM-dd');
+                } else if (task.recurring === 'monthly') {
+                    newStartDate = format(addMonths(startDateObj, 1), 'yyyy-MM-dd');
+                } else if (task.recurring === 'yearly') {
+                    newStartDate = format(addYears(startDateObj, 1), 'yyyy-MM-dd');
+                }
+            }
+            
+            if (newDueDate || newStartDate) {
+                await addTask({
+                    title: task.title,
+                    description: task.description,
+                    priority: task.priority,
+                    category: task.category,
+                    status: 'pending',
+                    dueDate: newDueDate || task.dueDate || '',
+                    dueTime: task.dueTime,
+                    startDate: newStartDate || task.startDate,
+                    startTime: task.startTime,
+                    recurring: task.recurring,
+                    planId: task.planId,
+                    userId: '',
+                });
+            }
+        }
 
         if (task.planId) {
             const plan = plans.find(p => p.id === task.planId);
