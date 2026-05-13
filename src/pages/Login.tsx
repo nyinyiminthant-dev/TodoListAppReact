@@ -68,14 +68,14 @@ export default function Login() {
                     )}
 
                     {/* Mobile App Download */}
-                    <a
+                    {/* <a
                         href={APK_URL}
                         download="TodoListAppMobile.apk"
                         className="flex items-center justify-center gap-2 py-3 mb-4 rounded-2xl bg-violet-600/20 border border-violet-500/30 text-violet-300 font-medium text-sm hover:bg-violet-600/30 transition-all duration-200"
                     >
                         <Smartphone className="w-4 h-4" />
                         Download Mobile App (Android APK)
-                    </a>
+                    </a> */}
 
                     {/* Google Sign-In */}
                     <button
