@@ -232,38 +232,16 @@ export default function Tasks() {
 
         if (next === 'completed' && task.recurring !== 'none') {
             const today = new Date();
-            let newDueDate = '';
-            let newStartDate = '';
             
-            if (task.recurring === 'daily') {
-                newStartDate = format(addDays(today, 1), 'yyyy-MM-dd');
-                newDueDate = task.dueDate ? format(addDays(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
-            } else if (task.recurring === 'weekly') {
-                newStartDate = format(addDays(today, 7), 'yyyy-MM-dd');
-                newDueDate = task.dueDate ? format(addDays(parseISO(task.dueDate), 7), 'yyyy-MM-dd') : '';
-            } else if (task.recurring === 'monthly') {
-                newStartDate = format(addMonths(today, 1), 'yyyy-MM-dd');
-                newDueDate = task.dueDate ? format(addMonths(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
-            } else if (task.recurring === 'yearly') {
-                newStartDate = format(addYears(today, 1), 'yyyy-MM-dd');
-                newDueDate = task.dueDate ? format(addYears(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
-            }
-            
-            if (newStartDate) {
-                await addTask({
-                    title: task.title,
-                    description: task.description,
-                    priority: task.priority,
-                    category: task.category,
-                    status: 'pending',
-                    dueDate: newDueDate || task.dueDate || '',
-                    dueTime: task.dueTime,
-                    startDate: newStartDate,
-                    startTime: task.startTime,
-                    recurring: task.recurring,
-                    planId: task.planId,
-                    userId: '',
-                });
+            if (task.dueDate) {
+                const dueDate = parseISO(task.dueDate);
+                if (isBefore(dueDate, today)) {
+                    setToast({ type: 'info', message: `Task completed! Recurring ended as due date passed.` });
+                } else {
+                    await createNextRecurringTask(task, today);
+                }
+            } else {
+                await createNextRecurringTask(task, today);
             }
         }
 
@@ -273,6 +251,42 @@ export default function Tasks() {
                 const newCount = next === 'completed' ? plan.completedCount + 1 : Math.max(0, plan.completedCount - 1);
                 await updatePlan(task.planId, { completedCount: newCount });
             }
+        }
+    };
+
+    const createNextRecurringTask = async (task: Task, baseDate: Date) => {
+        let newDueDate = '';
+        let newStartDate = '';
+        
+        if (task.recurring === 'daily') {
+            newStartDate = format(addDays(baseDate, 1), 'yyyy-MM-dd');
+            newDueDate = task.dueDate ? format(addDays(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
+        } else if (task.recurring === 'weekly') {
+            newStartDate = format(addDays(baseDate, 7), 'yyyy-MM-dd');
+            newDueDate = task.dueDate ? format(addDays(parseISO(task.dueDate), 7), 'yyyy-MM-dd') : '';
+        } else if (task.recurring === 'monthly') {
+            newStartDate = format(addMonths(baseDate, 1), 'yyyy-MM-dd');
+            newDueDate = task.dueDate ? format(addMonths(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
+        } else if (task.recurring === 'yearly') {
+            newStartDate = format(addYears(baseDate, 1), 'yyyy-MM-dd');
+            newDueDate = task.dueDate ? format(addYears(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
+        }
+        
+        if (newStartDate) {
+            await addTask({
+                title: task.title,
+                description: task.description,
+                priority: task.priority,
+                category: task.category,
+                status: 'pending',
+                dueDate: newDueDate || task.dueDate || '',
+                dueTime: task.dueTime,
+                startDate: newStartDate,
+                startTime: task.startTime,
+                recurring: task.recurring,
+                planId: task.planId,
+                userId: '',
+            });
         }
     };
 
