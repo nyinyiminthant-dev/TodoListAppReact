@@ -590,22 +590,22 @@ export default function Tasks() {
                                 <div key={groupName} className="mb-4">
                                     <button
                                         onClick={() => setCompletedGroupsExpanded(prev => ({ ...prev, [groupName]: !prev[groupName] }))}
-                                        className="flex items-center gap-2 w-full mb-2 hover:bg-white/5 p-2 rounded-lg transition-colors"
+                                        className="flex items-center gap-3 w-full mb-2 hover:bg-white/5 p-3 rounded-lg transition-all min-h-[44px]"
                                     >
                                         <svg 
-                                            className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                                            className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} 
                                             fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                         >
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
-                                        <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wide flex-1 text-left">
                                             {groupName}
                                         </h3>
-                                        <span className="text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">{items.length}</span>
+                                        <span className="text-xs text-slate-500 bg-white/5 px-2.5 py-1 rounded-full">{items.length}</span>
                                     </button>
                                     
-                                    {isExpanded && (
-                                        <div className="space-y-2 pl-6">
+                                    <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        <div className="space-y-2 pl-4">
                                             {items.map(task => (
                                                 <div
                                                     key={task.id}
@@ -625,7 +625,7 @@ export default function Tasks() {
                                                 </div>
                                             ))}
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             );
                         })}
