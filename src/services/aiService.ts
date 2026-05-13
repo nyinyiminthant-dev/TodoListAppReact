@@ -45,7 +45,8 @@ export interface GeneratedTask {
 export async function generatePlanRecommendation(
   goal: string,
   availableHoursPerWeek = 10,
-  preferredFrequency = 'daily'
+  preferredFrequency = 'daily',
+  existingPlans: { title: string; targetCount: number }[] = []
 ): Promise<PlanRecommendation> {
   const today = new Date();
   const todayStr = formatDateLocal(today);
@@ -54,11 +55,15 @@ export async function generatePlanRecommendation(
   if (preferredFrequency === 'weekly') defaultDays = 84;
   else if (preferredFrequency === 'monthly') defaultDays = 90;
 
+  const existingPlansContext = existingPlans.length > 0 
+    ? `\nUser's existing plans:\n${existingPlans.map(p => `- ${p.title} (target: ${p.targetCount})`).join('\n')}`
+    : '\nUser has no existing plans.';
+
   const prompt = `You are a productivity planning assistant. Based on the user's goal and available time, recommend optimal plan settings.
 
 Goal: "${goal}"
 Available hours per week: ${availableHoursPerWeek}
-Preferred frequency: ${preferredFrequency}
+Preferred frequency: ${preferredFrequency}${existingPlansContext}
 
 Today's date: ${todayStr}
 
@@ -71,7 +76,9 @@ Respond ONLY with valid JSON in this exact format, no markdown or explanation:
 
 Rules:
 - targetCount should be achievable given available hours
-- Consider the complexity of the goal when setting targets`;
+- Consider the complexity of the goal when setting targets
+- Avoid setting targets that conflict with existing plans
+- Make sure total weekly commitment is realistic (max 20 hours or 7 tasks per day)`;
 
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
@@ -82,14 +89,15 @@ Rules:
       'X-Title': 'TodoList App',
     },
     body: JSON.stringify({
-      model: 'openrouter/free',
+      model: 'meta-llama/llama-3.1-8b-instruct',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500,
+      max_tokens: 800,
     }),
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const errorText = await response.text();
+    console.error('OpenRouter error:', response.status, errorText);
     throw new Error(error.error?.message || 'Failed to generate recommendation');
   }
 
@@ -131,7 +139,8 @@ export async function generateTasksFromPlan(
   targetCount: number,
   targetDate: string,
   frequency: string = 'daily',
-  language: string = 'en'
+  language: string = 'en',
+  existingTasks: { title: string; dueDate: string }[] = []
 ): Promise<GeneratedTask[]> {
   const today = new Date();
   const todayStr = formatDateLocal(today);
@@ -145,6 +154,10 @@ export async function generateTasksFromPlan(
 
   const estimatedTotalTasks = Math.min(targetCount, Math.max(5, Math.ceil(totalDays * tasksPerWeek / 7)));
 
+  const existingTasksContext = existingTasks.length > 0
+    ? `\nUser's existing tasks (avoid duplicates):\n${existingTasks.slice(0, 5).map(t => `- ${t.title} (due: ${t.dueDate})`).join('\n')}`
+    : '';
+
   const langInstruction = language === 'my' 
     ? 'Generate all task titles and descriptions in Burmese (Myanmar) language using Myanmar script.'
     : 'Generate all task titles and descriptions in English language.';
@@ -157,7 +170,7 @@ Target: ${targetCount} completions
 Target Date: ${targetDate}
 Frequency: ${frequency}
 Today's Date: ${todayStr}
-Days until deadline: ${totalDays}
+Days until deadline: ${totalDays}${existingTasksContext}
 
 Respond ONLY with valid JSON array in this exact format, no markdown or explanation:
 [
@@ -181,6 +194,7 @@ Rules:
 - Mix priorities realistically (more medium/low than high)
 - dueTime and startTime should be empty string (not "00:00")
 - Include relevant category based on the goal
+- Make tasks different from existing tasks
 - ${langInstruction}`;
 
   const response = await fetch(OPENROUTER_API_URL, {
@@ -192,9 +206,9 @@ Rules:
       'X-Title': 'TodoList App',
     },
     body: JSON.stringify({
-      model: 'openrouter/free',
+      model: 'meta-llama/llama-3.1-8b-instruct',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 1000,
+      max_tokens: 1500,
     }),
   });
 
@@ -244,18 +258,39 @@ Rules:
         dueTime: task.dueTime === '00:00' ? '' : (task.dueTime || ''),
       };
     });
-  } catch {
+  } catch (e) {
+    console.error('Task generation error:', e);
     const fallbackTasks: GeneratedTask[] = [];
     const interval = Math.max(1, Math.floor(totalDays / estimatedTotalTasks));
+    
+    const goalKeywords = planTitle.toLowerCase().split(' ').filter(w => w.length > 3);
+    const actionVerbs: Record<string, string[]> = {
+      'read': ['Read chapter', 'Finish reading', 'Review notes', 'Summarize'],
+      'exercise': ['Do workout', 'Stretch', 'Cardio session', 'Strength training'],
+      'learn': ['Study lesson', 'Practice', 'Review material', 'Take quiz'],
+      'save': ['Track expense', 'Review budget', 'Save money', 'Check progress'],
+      'meditate': ['Meditate for', 'Practice breathing', 'Mindfulness', 'Relaxation'],
+      'stop': ['Take break', 'Rest your eyes', 'Walk away', 'Do stretch'],
+      'default': ['Complete task', 'Make progress', 'Review and adjust', 'Stay consistent']
+    };
+    
+    let verbs = actionVerbs['default'];
+    for (const key of Object.keys(actionVerbs)) {
+      if (planTitle.toLowerCase().includes(key)) {
+        verbs = actionVerbs[key];
+        break;
+      }
+    }
     
     for (let i = 0; i < estimatedTotalTasks; i++) {
       const date = addDays(today, i * interval);
       if (date <= endDate) {
+        const verb = verbs[i % verbs.length];
         fallbackTasks.push({
-          title: `${planTitle} - Step ${i + 1}`,
-          description: `Part ${i + 1} of your ${planTitle} plan`,
+          title: `${verb} ${i + 1}/${estimatedTotalTasks}`,
+          description: `Day ${i + 1}: Continue working towards your goal of ${planTitle}`,
           startDate: formatDateLocal(date),
-          priority: i === 0 ? 'high' : 'medium',
+          priority: i < 2 ? 'high' : (i < estimatedTotalTasks / 2 ? 'medium' : 'low'),
           dueDate: formatDateLocal(date),
           dueTime: '',
           category: 'planning',

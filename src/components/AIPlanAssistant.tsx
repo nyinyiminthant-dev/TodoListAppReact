@@ -5,9 +5,12 @@ import { format } from 'date-fns';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import CustomSelect from './CustomSelect';
+import { Plan } from '../types';
 
 interface AIPlanAssistantProps {
   onApply: (data: { title: string; targetDate: string; targetCount: number; suggestedFrequency: string }) => void;
+  existingPlans?: Plan[];
+  existingTasks?: { title: string; dueDate: string }[];
 }
 
 interface EditableTask extends GeneratedTask {
@@ -16,7 +19,7 @@ interface EditableTask extends GeneratedTask {
   startDate: string;
 }
 
-export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
+export default function AIPlanAssistant({ onApply, existingPlans = [], existingTasks = [] }: AIPlanAssistantProps) {
   const { addTask } = useFirestore();
   const { t, isMyanmar } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +48,12 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
     setRecommendation(null);
 
     try {
-      const result = await generatePlanRecommendation(goal, hoursPerWeek, frequency);
+      const result = await generatePlanRecommendation(
+        goal, 
+        hoursPerWeek, 
+        frequency,
+        existingPlans.map(p => ({ title: p.title, targetCount: p.targetCount }))
+      );
       setRecommendation(result);
     } catch {
       setError('Failed to get recommendation. Please try again.');
@@ -67,7 +75,8 @@ export default function AIPlanAssistant({ onApply }: AIPlanAssistantProps) {
         recommendation.targetCount,
         recommendation.targetDate,
         recommendation.suggestedFrequency,
-        isMyanmar ? 'my' : 'en'
+        isMyanmar ? 'my' : 'en',
+        existingTasks
       );
 
       const editableTasks: EditableTask[] = tasks.map((t, i) => ({

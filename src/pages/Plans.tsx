@@ -250,13 +250,15 @@ export default function Plans() {
     const handleAIGenerateTasks = async (plan: Plan) => {
         setGeneratingTasks(true);
         try {
+            const otherTasks = tasks.filter(t => t.planId !== plan.id).map(t => ({ title: t.title, dueDate: t.dueDate }));
             const generated = await generateTasksFromPlan(
                 plan.title,
                 plan.description,
                 plan.targetCount,
                 plan.targetDate,
                 'daily',
-                isMyanmar ? 'my' : 'en'
+                isMyanmar ? 'my' : 'en',
+                otherTasks
             );
             const editableTasks: EditableTask[] = generated.map((t, i) => ({
                 ...t,
@@ -338,7 +340,11 @@ export default function Plans() {
                     <p className="text-slate-400 text-sm mt-1">{plans.length} {t('totalGoals')}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    <AIPlanAssistant onApply={handleAIApply} />
+                    <AIPlanAssistant 
+                      onApply={handleAIApply} 
+                      existingPlans={plans}
+                      existingTasks={tasks.map(t => ({ title: t.title, dueDate: t.dueDate }))}
+                    />
                     <button
                         onClick={() => { resetForm(); setShowForm(true); }}
                         className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-violet-500/30"
