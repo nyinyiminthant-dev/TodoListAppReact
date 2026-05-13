@@ -231,36 +231,25 @@ export default function Tasks() {
         });
 
         if (next === 'completed' && task.recurring !== 'none') {
+            const today = new Date();
             let newDueDate = '';
-            let newStartDate = task.startDate || '';
+            let newStartDate = '';
             
-            if (task.dueDate) {
-                const dueDateObj = parseISO(task.dueDate);
-                if (task.recurring === 'daily') {
-                    newDueDate = format(addDays(dueDateObj, 1), 'yyyy-MM-dd');
-                } else if (task.recurring === 'weekly') {
-                    newDueDate = format(addDays(dueDateObj, 7), 'yyyy-MM-dd');
-                } else if (task.recurring === 'monthly') {
-                    newDueDate = format(addMonths(dueDateObj, 1), 'yyyy-MM-dd');
-                } else if (task.recurring === 'yearly') {
-                    newDueDate = format(addYears(dueDateObj, 1), 'yyyy-MM-dd');
-                }
+            if (task.recurring === 'daily') {
+                newStartDate = format(addDays(today, 1), 'yyyy-MM-dd');
+                newDueDate = task.dueDate ? format(addDays(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
+            } else if (task.recurring === 'weekly') {
+                newStartDate = format(addDays(today, 7), 'yyyy-MM-dd');
+                newDueDate = task.dueDate ? format(addDays(parseISO(task.dueDate), 7), 'yyyy-MM-dd') : '';
+            } else if (task.recurring === 'monthly') {
+                newStartDate = format(addMonths(today, 1), 'yyyy-MM-dd');
+                newDueDate = task.dueDate ? format(addMonths(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
+            } else if (task.recurring === 'yearly') {
+                newStartDate = format(addYears(today, 1), 'yyyy-MM-dd');
+                newDueDate = task.dueDate ? format(addYears(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
             }
             
-            if (task.startDate) {
-                const startDateObj = parseISO(task.startDate);
-                if (task.recurring === 'daily') {
-                    newStartDate = format(addDays(startDateObj, 1), 'yyyy-MM-dd');
-                } else if (task.recurring === 'weekly') {
-                    newStartDate = format(addDays(startDateObj, 7), 'yyyy-MM-dd');
-                } else if (task.recurring === 'monthly') {
-                    newStartDate = format(addMonths(startDateObj, 1), 'yyyy-MM-dd');
-                } else if (task.recurring === 'yearly') {
-                    newStartDate = format(addYears(startDateObj, 1), 'yyyy-MM-dd');
-                }
-            }
-            
-            if (newDueDate || newStartDate) {
+            if (newStartDate) {
                 await addTask({
                     title: task.title,
                     description: task.description,
@@ -269,7 +258,7 @@ export default function Tasks() {
                     status: 'pending',
                     dueDate: newDueDate || task.dueDate || '',
                     dueTime: task.dueTime,
-                    startDate: newStartDate || task.startDate,
+                    startDate: newStartDate,
                     startTime: task.startTime,
                     recurring: task.recurring,
                     planId: task.planId,
