@@ -164,6 +164,7 @@ export default function Tasks() {
     const [toast, setToast] = useState<ToastState | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
     const [isClosing, setIsClosing] = useState(false);
+    const [completedGroupsExpanded, setCompletedGroupsExpanded] = useState<Record<string, boolean>>({});
 
     const closeToast = useCallback(() => setToast(null), []);
 
@@ -583,35 +584,48 @@ export default function Tasks() {
                             const items = groupedCompleted[groupName];
                             if (!items || items.length === 0) return null;
                             
+                            const isExpanded = completedGroupsExpanded[groupName] ?? true;
+                            
                             return (
-                                <div key={groupName} className="mb-6">
-                                    <div className="flex items-center gap-2 mb-3">
+                                <div key={groupName} className="mb-4">
+                                    <button
+                                        onClick={() => setCompletedGroupsExpanded(prev => ({ ...prev, [groupName]: !prev[groupName] }))}
+                                        className="flex items-center gap-2 w-full mb-2 hover:bg-white/5 p-2 rounded-lg transition-colors"
+                                    >
+                                        <svg 
+                                            className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
                                         <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                                             {groupName}
                                         </h3>
                                         <span className="text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">{items.length}</span>
-                                    </div>
+                                    </button>
                                     
-                                    <div className="space-y-2">
-                                        {items.map(task => (
-                                            <div
-                                                key={task.id}
-                                                className="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 opacity-60"
-                                                style={{ borderLeftWidth: '3px', borderLeftColor: priorityColors[task.priority] }}
-                                            >
-                                                <button
-                                                    onClick={() => handleToggleComplete(task)}
-                                                    className="shrink-0 mt-0.5 transition-transform active:scale-90"
+                                    {isExpanded && (
+                                        <div className="space-y-2 pl-6">
+                                            {items.map(task => (
+                                                <div
+                                                    key={task.id}
+                                                    className="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 opacity-60"
+                                                    style={{ borderLeftWidth: '3px', borderLeftColor: priorityColors[task.priority] }}
                                                 >
-                                                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                                                </button>
-                                                
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-sm line-through text-slate-500">{task.title}</p>
+                                                    <button
+                                                        onClick={() => handleToggleComplete(task)}
+                                                        className="shrink-0 mt-0.5 transition-transform active:scale-90"
+                                                    >
+                                                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                                    </button>
+                                                    
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-sm line-through text-slate-500">{task.title}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
