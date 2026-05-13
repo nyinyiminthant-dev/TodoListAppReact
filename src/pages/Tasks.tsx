@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import {
     Plus, Search, SlidersHorizontal, X, Circle, CheckCircle2,
     Pencil, Trash2, ArrowUpDown, Calendar, Clock, RefreshCw, Tag, Link2,
-    Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays
+    Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays, PlayCircle
 } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -17,6 +17,28 @@ const priorityColors: Record<Priority, string> = {
     high: '#ef4444',
     medium: '#f59e0b',
     low: '#10b981',
+};
+
+const getDateLabel = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+        const date = parseISO(dateStr);
+        if (isToday(date)) return 'Today';
+        if (isTomorrow(date)) return 'Tomorrow';
+        return format(date, 'MMM d');
+    } catch {
+        return dateStr;
+    }
+};
+
+const getDueDateLabel = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+        const date = parseISO(dateStr);
+        return format(date, 'MMM d');
+    } catch {
+        return dateStr;
+    }
 };
 
 const categoryColors: Record<Category, string> = {
@@ -80,14 +102,16 @@ const isOverdue = (task: Task): boolean => {
 
         for (const task of tasks) {
             if (task.status === 'completed') { groups[completedKey].push(task); continue; }
-            if (!task.dueDate) { groups[noDueDateKey].push(task); continue; }
             
-            if (isOverdue(task)) { groups[overdueKey].push(task); continue; }
+            const groupDate = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
             
-            const d = parseISO(task.dueDate);
-            if (isToday(d)) { groups[todayKey].push(task); continue; }
-            if (isTomorrow(d)) { groups[tomorrowKey].push(task); continue; }
-            if (isWithinInterval(d, { start: now, end: addDays(now, 7) })) { groups[thisWeekKey].push(task); continue; }
+            if (!groupDate) { groups[noDueDateKey].push(task); continue; }
+            
+            if (task.dueDate && isOverdue(task)) { groups[overdueKey].push(task); continue; }
+            
+            if (isToday(groupDate)) { groups[todayKey].push(task); continue; }
+            if (isTomorrow(groupDate)) { groups[tomorrowKey].push(task); continue; }
+            if (isWithinInterval(groupDate, { start: now, end: addDays(now, 7) })) { groups[thisWeekKey].push(task); continue; }
             groups[laterKey].push(task);
         }
 
@@ -449,9 +473,14 @@ export default function Tasks() {
                                                     {task.category === 'planning' && <CalendarDays className="w-3 h-3" />}
                                                     {task.category}
                                                 </span>
+                                                {task.startDate && (
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 flex items-center gap-1">
+                                                        <PlayCircle className="w-3 h-3" />Start: {getDateLabel(task.startDate)}
+                                                    </span>
+                                                )}
                                                 {task.dueDate && (
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-slate-400 flex items-center gap-1">
-                                                        <Calendar className="w-3 h-3" />{format(parseISO(task.dueDate), 'MMM d')}
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />Due: {getDueDateLabel(task.dueDate)}
                                                     </span>
                                                 )}
                                                 {task.dueTime && (
