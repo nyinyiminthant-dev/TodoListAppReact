@@ -9,7 +9,7 @@ import {
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Task, Plan, Priority, Category } from '../types';
-import { parseISO, isToday, isTomorrow, isPast, format, isWithinInterval, addDays, addMonths, addYears, setHours, setMinutes, isBefore, differenceInMinutes } from 'date-fns';
+import { parseISO, isToday, isTomorrow, isYesterday, isPast, format, isWithinInterval, addDays, addMonths, addYears, setHours, setMinutes, isBefore, differenceInMinutes } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -80,6 +80,34 @@ const isOverdue = (task: Task): boolean => {
         return false;
     };
 
+    function groupCompletedTasks(tasks: Task[]) {
+        const groups: Record<string, Task[]> = {};
+        
+        for (const task of tasks) {
+            if (task.status !== 'completed' || !task.completedAt) continue;
+            
+            const completedDate = parseISO(task.completedAt);
+            let label: string;
+            
+            if (isToday(completedDate)) {
+                label = 'Today';
+            } else if (isYesterday(completedDate)) {
+                label = 'Yesterday';
+            } else if (isWithinInterval(completedDate, { start: addDays(new Date(), -7), end: new Date() })) {
+                label = 'This Week';
+            } else if (isWithinInterval(completedDate, { start: addDays(new Date(), -30), end: addDays(new Date(), -7) })) {
+                label = 'This Month';
+            } else {
+                label = format(completedDate, 'MMM d, yyyy');
+            }
+            
+            if (!groups[label]) groups[label] = [];
+            groups[label].push(task);
+        }
+        
+        return groups;
+    }
+
     function groupTasks(tasks: Task[], t: (key: string) => string) {
         const now = new Date();
         const groups: Record<string, Task[]> = {
@@ -89,7 +117,6 @@ const isOverdue = (task: Task): boolean => {
             [t('thisWeek')]: [],
             [t('later')]: [],
             [t('noDueDate')]: [],
-            [t('completed')]: [],
         };
 
         const overdueKey = t('overdue');
@@ -98,10 +125,9 @@ const isOverdue = (task: Task): boolean => {
         const thisWeekKey = t('thisWeek');
         const laterKey = t('later');
         const noDueDateKey = t('noDueDate');
-        const completedKey = t('completed');
 
         for (const task of tasks) {
-            if (task.status === 'completed') { groups[completedKey].push(task); continue; }
+            if (task.status === 'completed') continue;
             
             const groupDate = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
             
@@ -322,6 +348,7 @@ export default function Tasks() {
     }, [tasks, filterPlan, search, filterStatus, filterPriority, filterCategory, sortOrder]);
 
     const grouped = useMemo(() => groupTasks(filteredTasks, t), [filteredTasks, t]);
+    const groupedCompleted = useMemo(() => groupCompletedTasks(filteredTasks), [filteredTasks]);
 
     const groupOrder = [
         t('overdue'),
@@ -330,8 +357,17 @@ export default function Tasks() {
         t('thisWeek'),
         t('later'),
         t('noDueDate'),
-        t('completed'),
     ];
+
+    const completedGroupOrder = Object.keys(groupedCompleted).sort((a, b) => {
+        const order = ['Today', 'Yesterday', 'This Week', 'This Month'];
+        const aIndex = order.indexOf(a);
+        const bIndex = order.indexOf(b);
+        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+        if (aIndex !== -1) return -1;
+        if (bIndex !== -1) return 1;
+        return 0;
+    });
 
     return (
         <div>
@@ -530,6 +566,57 @@ export default function Tasks() {
                         </div>
                     );
                 })}
+
+                {/* Completed tasks grouped by date */}
+                {completedGroupOrder.length > 0 && (
+                    <div className="mt-8 pt-6 border-t border-white/10">
+                        <div className="flex items-center gap-2 mb-4">
+                            <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-400">
+                                Completed
+                            </h2>
+                            <span className="text-xs text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">
+                                {Object.values(groupedCompleted).flat().length}
+                            </span>
+                        </div>
+                        
+                        {completedGroupOrder.map(groupName => {
+                            const items = groupedCompleted[groupName];
+                            if (!items || items.length === 0) return null;
+                            
+                            return (
+                                <div key={groupName} className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                            {groupName}
+                                        </h3>
+                                        <span className="text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">{items.length}</span>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        {items.map(task => (
+                                            <div
+                                                key={task.id}
+                                                className="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 opacity-60"
+                                                style={{ borderLeftWidth: '3px', borderLeftColor: priorityColors[task.priority] }}
+                                            >
+                                                <button
+                                                    onClick={() => handleToggleComplete(task)}
+                                                    className="shrink-0 mt-0.5 transition-transform active:scale-90"
+                                                >
+                                                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                                </button>
+                                                
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-sm line-through text-slate-500">{task.title}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {filteredTasks.length === 0 && (
                     <div className="text-center py-20 text-slate-400">
