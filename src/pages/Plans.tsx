@@ -97,6 +97,7 @@ export default function Plans() {
     const [showForm, setShowForm] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [planGroupsExpanded, setPlanGroupsExpanded] = useState<Record<string, boolean>>({});
     const [formData, setFormData] = useState({ ...emptyForm });
     const [submitting, setSubmitting] = useState(false);
     const [toast, setToast] = useState<ToastState | null>(null);
@@ -146,6 +147,31 @@ export default function Plans() {
         const overdue = plansWithStatus.filter(p => ['overdue', 'failed'].includes(p.calculatedStatus)).length;
         return { on_track, at_risk, completed, overdue };
     }, [plansWithStatus]);
+
+    const groupedPlans = useMemo(() => {
+        const groups: Record<string, typeof plansWithStatus> = {
+            on_track: [],
+            at_risk: [],
+            completed: [],
+            overdue: [],
+        };
+        
+        for (const plan of plansWithStatus) {
+            if (plan.calculatedStatus === 'on_track') groups.on_track.push(plan);
+            else if (plan.calculatedStatus === 'at_risk') groups.at_risk.push(plan);
+            else if (plan.calculatedStatus === 'completed') groups.completed.push(plan);
+            else groups.overdue.push(plan);
+        }
+        
+        return groups;
+    }, [plansWithStatus]);
+
+    const planGroupOrder = [
+        { key: 'on_track', label: t('onTrack'), color: '#10b981' },
+        { key: 'at_risk', label: t('atRisk'), color: '#f59e0b' },
+        { key: 'completed', label: t('completedGroup'), color: '#6366f1' },
+        { key: 'overdue', label: t('overdue'), color: '#ef4444' },
+    ];
 
     const linkedTasks = useMemo(() =>
         selectedPlan ? tasks.filter(t => t.planId === selectedPlan) : [],
@@ -372,7 +398,33 @@ export default function Plans() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {plansWithStatus.map(plan => {
+                    {planGroupOrder.map(group => {
+                        const groupPlans = groupedPlans[group.key];
+                        if (groupPlans.length === 0) return null;
+                        
+                        const isExpanded = planGroupsExpanded[group.key] ?? true;
+                        
+                        return (
+                            <div key={group.key}>
+                                <button
+                                    onClick={() => setPlanGroupsExpanded(prev => ({ ...prev, [group.key]: !prev[group.key] }))}
+                                    className="flex items-center gap-2 w-full mb-3 hover:bg-white/5 p-2 rounded-lg transition-colors"
+                                >
+                                    <svg 
+                                        className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <h3 className="text-xs font-medium uppercase tracking-wide" style={{ color: group.color }}>
+                                        {group.label}
+                                    </h3>
+                                    <span className="text-xs text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">{groupPlans.length}</span>
+                                </button>
+                                
+                                {isExpanded && (
+                                    <div className="space-y-4">
+                                        {groupPlans.map(plan => {
                         const pct = plan.targetCount > 0 ? (plan.completedCount / plan.targetCount) * 100 : 0;
                         const cfg = statusConfig[plan.calculatedStatus];
                         const daysLeft = differenceInDays(toDate(plan.targetDate), new Date());
@@ -462,6 +514,11 @@ export default function Plans() {
                                         </div>
                                     )}
                                 </div>
+                            </div>
+                        );
+                                    })}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
