@@ -617,6 +617,10 @@ export default function Tasks() {
                                                                 e.stopPropagation();
                                                                 handleToggleComplete(task);
                                                                 setExpandedTaskId(null);
+                                                                setToast({ 
+                                                                    type: 'success', 
+                                                                    message: task.status === 'completed' ? 'Task restored!' : 'Task completed successfully!' 
+                                                                });
                                                             }}
                                                             className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${task.status === 'completed' ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 hover:bg-amber-500/30' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'}`}
                                                         >
