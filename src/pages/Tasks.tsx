@@ -666,16 +666,25 @@ export default function Tasks() {
                                                             </button>
                                                         </div>
 
-                                                        {infoBoxTaskId === task.id && (
-                                                            <div className="pl-2 pr-2 w-full">
-                                                                <div className="rounded-lg p-3 bg-amber-900/20 border border-amber-400/20 text-amber-100 text-sm flex items-start justify-between gap-2">
-                                                                    <div>Can't complete tomorrow task — only today tasks can be completed.</div>
-                                                                    <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
-                                                                        <X className="w-4 h-4 text-slate-300" />
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                        <AnimatePresence>
+                                                            {infoBoxTaskId === task.id && (
+                                                                <motion.div
+                                                                    key={`info-${task.id}`}
+                                                                    initial={{ height: 0, opacity: 0 }}
+                                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                                    exit={{ height: 0, opacity: 0 }}
+                                                                    transition={{ duration: 0.18 }}
+                                                                    className="pl-2 pr-2 w-full overflow-hidden"
+                                                                >
+                                                                    <div className="rounded-lg p-3 bg-amber-900/20 border border-amber-400/20 text-amber-100 text-sm flex items-start justify-between gap-2">
+                                                                        <div>Can't complete tomorrow task — only today tasks can be completed.</div>
+                                                                        <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
+                                                                            <X className="w-4 h-4 text-slate-300" />
+                                                                        </button>
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
                                                     </div>
                                                 </motion.div>
                                             )}
