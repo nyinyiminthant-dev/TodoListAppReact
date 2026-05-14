@@ -522,7 +522,7 @@ export default function Tasks() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleToggleComplete(task);
+                                                    setExpandedTaskId(expandedTaskId === task.id ? null : task.id);
                                                 }}
                                                 className="shrink-0 mt-0.5 transition-transform active:scale-90"
                                             >
@@ -618,10 +618,10 @@ export default function Tasks() {
                                                                 handleToggleComplete(task);
                                                                 setExpandedTaskId(null);
                                                             }}
-                                                            className="flex-1 py-2 px-4 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-sm font-medium hover:bg-emerald-500/30 transition-all flex items-center justify-center gap-2"
+                                                            className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${task.status === 'completed' ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 hover:bg-amber-500/30' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'}`}
                                                         >
                                                             <CheckCircle2 className="w-4 h-4" />
-                                                            Confirm
+                                                            {task.status === 'completed' ? 'Restore' : 'Complete'}
                                                         </button>
                                                         <button
                                                             onClick={(e) => {
