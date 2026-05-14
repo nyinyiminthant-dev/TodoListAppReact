@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     Plus, Search, SlidersHorizontal, X, Circle, CheckCircle2,
     Pencil, Trash2, ArrowUpDown, Calendar, Clock, RefreshCw, Tag, Link2,
@@ -165,6 +165,7 @@ export default function Tasks() {
     const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
     const [isClosing, setIsClosing] = useState(false);
     const [completedGroupsExpanded, setCompletedGroupsExpanded] = useState<Record<string, boolean>>({});
+    const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
     const closeToast = useCallback(() => setToast(null), []);
 
@@ -174,6 +175,16 @@ export default function Tasks() {
             setFilterPlan(planParam);
         }
     }, [searchParams, setSearchParams]);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (expandedTaskId && !(e.target as HTMLElement).closest('[data-task-expanded]')) {
+                setExpandedTaskId(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [expandedTaskId]);
 
     const resetForm = () => {
         setFormData(emptyForm);
@@ -498,89 +509,134 @@ export default function Tasks() {
 
                             <div className="space-y-2">
                                 {items.map(task => (
-                                    <div
-                                        key={task.id}
-                                        className={`flex items-start gap-3 p-4 rounded-2xl bg-white/5 border transition-all hover:bg-white/8 group ${task.status === 'completed' ? 'opacity-60 border-white/5' : 'border-white/10 hover:border-white/20'} ${highlightedTask === task.id ? 'animate-border-pulse border-violet-400' : ''}`}
-                                        style={{ borderLeftWidth: '3px', borderLeftColor: priorityColors[task.priority] }}
-                                    >
-                                        {/* Checkbox */}
-                                        <button
-                                            onClick={() => handleToggleComplete(task)}
-                                            className="shrink-0 mt-0.5 transition-transform active:scale-90"
+                                    <div key={task.id} data-task-expanded={expandedTaskId === task.id ? 'true' : undefined}>
+                                        <div
+                                            onClick={(e) => {
+                                                if ((e.target as HTMLElement).closest('button')) return;
+                                                setExpandedTaskId(expandedTaskId === task.id ? null : task.id);
+                                            }}
+                                            className={`flex items-start gap-3 p-4 rounded-2xl bg-white/5 border transition-all hover:bg-white/8 group ${task.status === 'completed' ? 'opacity-60 border-white/5' : 'border-white/10 hover:border-white/20'} ${highlightedTask === task.id ? 'animate-border-pulse border-violet-400' : ''} ${expandedTaskId === task.id ? '!bg-white/10' : ''}`}
+                                            style={{ borderLeftWidth: '3px', borderLeftColor: priorityColors[task.priority] }}
                                         >
-                                            {task.status === 'completed'
-                                                ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                                                : <Circle className="w-5 h-5 text-slate-500 hover:text-violet-400 transition-colors" />
-                                            }
-                                        </button>
+                                            {/* Checkbox */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleComplete(task);
+                                                }}
+                                                className="shrink-0 mt-0.5 transition-transform active:scale-90"
+                                            >
+                                                {task.status === 'completed'
+                                                    ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                                    : <Circle className="w-5 h-5 text-slate-500 hover:text-violet-400 transition-colors" />
+                                                }
+                                            </button>
 
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`font-medium text-sm ${task.status === 'completed' ? 'line-through text-slate-500' : 'text-white'}`}>{task.title}</p>
-                                            {task.description && (
-                                                <p className="text-xs text-slate-400 mt-0.5 truncate">{task.description}</p>
-                                            )}
-                                            <div className="flex flex-wrap gap-1.5 mt-2">
-                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: `${priorityColors[task.priority]}20`, color: priorityColors[task.priority] }}>
-                                                    {task.priority}
-                                                </span>
-                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize flex items-center gap-1" style={{ background: `${categoryColors[task.category]}20`, color: categoryColors[task.category] }}>
-                                                    {task.category === 'work' && <Briefcase className="w-3 h-3" />}
-                                                    {task.category === 'personal' && <User2 className="w-3 h-3" />}
-                                                    {task.category === 'health' && <HeartPulse className="w-3 h-3" />}
-                                                    {task.category === 'shopping' && <ShoppingBag className="w-3 h-3" />}
-                                                    {task.category === 'studying' && <BookOpen className="w-3 h-3" />}
-                                                    {task.category === 'planning' && <CalendarDays className="w-3 h-3" />}
-                                                    {task.category}
-                                                </span>
-                                                {task.startDate && (
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 flex items-center gap-1">
-                                                        <PlayCircle className="w-3 h-3" />Start: {getDateLabel(task.startDate)}
-                                                    </span>
+                                            {/* Content */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-medium text-sm ${task.status === 'completed' ? 'line-through text-slate-500' : 'text-white'}`}>{task.title}</p>
+                                                {task.description && (
+                                                    <p className="text-xs text-slate-400 mt-0.5 truncate">{task.description}</p>
                                                 )}
-                                                {task.dueDate && (
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 flex items-center gap-1">
-                                                        <Calendar className="w-3 h-3" />Due: {getDueDateLabel(task.dueDate)}
+                                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                                    <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize" style={{ background: `${priorityColors[task.priority]}20`, color: priorityColors[task.priority] }}>
+                                                        {task.priority}
                                                     </span>
-                                                )}
-                                                {task.dueTime && (
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-slate-400 flex items-center gap-1">
-                                                        <Clock className="w-3 h-3" />{task.dueTime}
+                                                    <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize flex items-center gap-1" style={{ background: `${categoryColors[task.category]}20`, color: categoryColors[task.category] }}>
+                                                        {task.category === 'work' && <Briefcase className="w-3 h-3" />}
+                                                        {task.category === 'personal' && <User2 className="w-3 h-3" />}
+                                                        {task.category === 'health' && <HeartPulse className="w-3 h-3" />}
+                                                        {task.category === 'shopping' && <ShoppingBag className="w-3 h-3" />}
+                                                        {task.category === 'studying' && <BookOpen className="w-3 h-3" />}
+                                                        {task.category === 'planning' && <CalendarDays className="w-3 h-3" />}
+                                                        {task.category}
                                                     </span>
-                                                )}
-                                                {task.recurring !== 'none' && (
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 flex items-center gap-1 capitalize">
-                                                        <RefreshCw className="w-3 h-3" />{task.recurring}
-                                                    </span>
-                                                )}
-                                                {task.planId && (() => {
-                                                    const linked = plans.find((p: Plan) => p.id === task.planId);
-                                                    return linked ? (
-                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-400 flex items-center gap-1">
-                                                            <Link2 className="w-3 h-3" />{linked.title}
+                                                    {task.startDate && (
+                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 flex items-center gap-1">
+                                                            <PlayCircle className="w-3 h-3" />Start: {getDateLabel(task.startDate)}
                                                         </span>
-                                                    ) : null;
-                                                })()}
+                                                    )}
+                                                    {task.dueDate && (
+                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 flex items-center gap-1">
+                                                            <Calendar className="w-3 h-3" />Due: {getDueDateLabel(task.dueDate)}
+                                                        </span>
+                                                    )}
+                                                    {task.dueTime && (
+                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-slate-400 flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" />{task.dueTime}
+                                                        </span>
+                                                    )}
+                                                    {task.recurring !== 'none' && (
+                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 flex items-center gap-1 capitalize">
+                                                            <RefreshCw className="w-3 h-3" />{task.recurring}
+                                                        </span>
+                                                    )}
+                                                    {task.planId && (() => {
+                                                        const linked = plans.find((p: Plan) => p.id === task.planId);
+                                                        return linked ? (
+                                                            <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-400 flex items-center gap-1">
+                                                                <Link2 className="w-3 h-3" />{linked.title}
+                                                            </span>
+                                                        ) : null;
+                                                    })()}
+                                                </div>
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
+                                                <button onClick={(e) => { e.stopPropagation(); handleEdit(task); }} className="p-1.5 rounded-lg hover:bg-violet-500/20 text-slate-400 hover:text-violet-400 transition-all">
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); setConfirmDelete({ id: task.id, title: task.title }); }} className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <div className="flex gap-1 shrink-0 sm:hidden">
+                                                <button onClick={(e) => { e.stopPropagation(); handleEdit(task); }} className="p-1.5 rounded-lg hover:bg-violet-500/20 text-slate-400 hover:text-violet-400 transition-all">
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); setConfirmDelete({ id: task.id, title: task.title }); }} className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
-
-                                        {/* Actions */}
-                                        <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
-                                            <button onClick={() => handleEdit(task)} className="p-1.5 rounded-lg hover:bg-violet-500/20 text-slate-400 hover:text-violet-400 transition-all">
-                                                <Pencil className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => setConfirmDelete({ id: task.id, title: task.title })} className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        <div className="flex gap-1 shrink-0 sm:hidden">
-                                            <button onClick={() => handleEdit(task)} className="p-1.5 rounded-lg hover:bg-violet-500/20 text-slate-400 hover:text-violet-400 transition-all">
-                                                <Pencil className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => setConfirmDelete({ id: task.id, title: task.title })} className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-all">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                                        
+                                        {/* Expandable Confirm/Cancel buttons */}
+                                        <AnimatePresence>
+                                            {expandedTaskId === task.id && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="flex gap-2 pt-2 pl-8">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleComplete(task);
+                                                                setExpandedTaskId(null);
+                                                            }}
+                                                            className="flex-1 py-2 px-4 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-sm font-medium hover:bg-emerald-500/30 transition-all flex items-center justify-center gap-2"
+                                                        >
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                            Confirm
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setExpandedTaskId(null);
+                                                            }}
+                                                            className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-sm font-medium hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 ))}
                             </div>
