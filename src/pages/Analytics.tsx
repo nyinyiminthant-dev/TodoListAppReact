@@ -10,7 +10,7 @@ import {
     startOfMonth, endOfMonth, startOfWeek, endOfWeek,
     startOfYear, endOfYear, eachDayOfInterval, eachWeekOfInterval,
     eachMonthOfInterval, format, isSameDay, isSameMonth,
-    addMonths, subMonths, addYears, subYears, isWithinInterval, parseISO
+    addMonths, subMonths, addYears, subYears, addWeeks, subWeeks, isWithinInterval, parseISO
 } from 'date-fns';
 
 type ViewType = 'month' | 'week' | 'year';
@@ -39,18 +39,25 @@ export default function Analytics() {
     const [currentDate, setCurrentDate] = useState(new Date());
 
     const handlePrev = () => {
-        if (viewType === 'month' || viewType === 'week') setCurrentDate(d => subMonths(d, 1));
-        else setCurrentDate(d => subYears(d, 1));
+        if (viewType === 'year') setCurrentDate(d => subYears(d, 1));
+        else if (viewType === 'week') setCurrentDate(d => subWeeks(d, 1));
+        else setCurrentDate(d => subMonths(d, 1));
     };
 
     const handleNext = () => {
-        if (viewType === 'month' || viewType === 'week') setCurrentDate(d => addMonths(d, 1));
-        else setCurrentDate(d => addYears(d, 1));
+        if (viewType === 'year') setCurrentDate(d => addYears(d, 1));
+        else if (viewType === 'week') setCurrentDate(d => addWeeks(d, 1));
+        else setCurrentDate(d => addMonths(d, 1));
     };
 
     const dateRange = useMemo(() => {
         if (viewType === 'year') {
             return { start: startOfYear(currentDate), end: endOfYear(currentDate), label: format(currentDate, 'yyyy') };
+        }
+        if (viewType === 'week') {
+            const weekStart = startOfWeek(currentDate);
+            const weekEnd = endOfWeek(currentDate);
+            return { start: weekStart, end: weekEnd, label: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}` };
         }
         return { start: startOfMonth(currentDate), end: endOfMonth(currentDate), label: format(currentDate, 'MMMM yyyy') };
     }, [viewType, currentDate]);
@@ -60,12 +67,17 @@ export default function Analytics() {
         [tasks, dateRange]
     );
 
+    const completedTasksInRange = useMemo(() =>
+        tasks.filter(t => t.completedAt && isWithinInterval(parseISO(t.completedAt), dateRange)),
+        [tasks, dateRange]
+    );
+
     const stats = useMemo(() => {
         const total = tasksInRange.length;
-        const completed = tasksInRange.filter(t => t.status === 'completed').length;
+        const completed = completedTasksInRange.length;
         const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
         return { total, completed, rate };
-    }, [tasksInRange]);
+    }, [tasksInRange, completedTasksInRange]);
 
     const monthlyData = useMemo(() => {
         const days = eachDayOfInterval({ start: dateRange.start, end: dateRange.end });
@@ -108,10 +120,10 @@ export default function Analytics() {
     const categoryData = useMemo(() => {
         return categories.map(cat => ({
             name: cat.name,
-            value: tasksInRange.filter(t => t.category === cat.id && t.status === 'completed').length,
+            value: completedTasksInRange.filter(t => t.category === cat.id).length,
             color: categoryColors[cat.id] || cat.color,
         })).filter(c => c.value > 0);
-    }, [categories, tasksInRange]);
+    }, [categories, completedTasksInRange]);
 
     return (
         <div>
