@@ -209,6 +209,11 @@ export default function Plans() {
         e.preventDefault();
         if (!formData.title.trim() || !formData.targetDate) return;
 
+        if (!editingPlan && !formData.startDate) {
+            setToast({ type: 'error', message: 'Please select a start date to create a plan' });
+            return;
+        }
+
         setSubmitting(true);
         setToast({ type: 'loading', message: editingPlan ? 'Saving changes…' : 'Creating plan…' });
 
