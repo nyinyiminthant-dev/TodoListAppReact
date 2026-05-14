@@ -8,8 +8,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'manual',
       includeAssets: ['icon-192.png', 'icon-512.png', 'maskable-icon.png', 'favicon.svg'],
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+      },
       manifest: {
         name: 'Todo List App',
         short_name: 'TodoList',
