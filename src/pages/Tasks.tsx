@@ -9,7 +9,7 @@ import {
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Task, Plan, Priority, Category } from '../types';
-import { parseISO, isToday, isTomorrow, isYesterday, isPast, format, isWithinInterval, addDays, addMonths, addYears, setHours, setMinutes, isBefore, differenceInMinutes } from 'date-fns';
+import { parseISO, isToday, isTomorrow, isYesterday, isPast, format, isWithinInterval, addDays, addMonths, addYears, setHours, setMinutes, isBefore, differenceInMinutes, isAfter, startOfDay } from 'date-fns';
 import Toast, { ToastState } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -251,6 +251,15 @@ export default function Tasks() {
     };
 
     const handleToggleComplete = async (task: Task) => {
+        const now = new Date();
+        const todayStart = startOfDay(now);
+        const taskStartDate = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
+        
+        if (task.status !== 'completed' && taskStartDate && isAfter(parseISO(task.startDate || task.dueDate!), todayStart)) {
+            setToast({ type: 'error', message: `Cannot complete future tasks. Complete from ${format(parseISO(task.startDate || task.dueDate!), 'MMM d')} only.` });
+            return;
+        }
+
         const next = task.status === 'completed' ? 'pending' : 'completed';
         await updateTask(task.id, {
             status: next,
