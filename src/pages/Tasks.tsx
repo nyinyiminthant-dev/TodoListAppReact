@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
     Plus, Search, SlidersHorizontal, X, Circle, CheckCircle2,
     Pencil, Trash2, ArrowUpDown, Calendar, Clock, RefreshCw, Tag, Link2,
-    Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays, PlayCircle
+    Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays, PlayCircle, Lightbulb
 } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -64,85 +64,85 @@ const emptyForm = {
 };
 
 const isOverdue = (task: Task): boolean => {
-        if (!task.dueDate || task.status === 'completed') return false;
-        
-        const now = new Date();
-        const dueDate = parseISO(task.dueDate);
-        
-        if (isPast(dueDate)) {
-          if (isToday(dueDate) && task.dueTime) {
+    if (!task.dueDate || task.status === 'completed') return false;
+
+    const now = new Date();
+    const dueDate = parseISO(task.dueDate);
+
+    if (isPast(dueDate)) {
+        if (isToday(dueDate) && task.dueTime) {
             const [hours, minutes] = task.dueTime.split(':').map(Number);
             const dueDateTime = setMinutes(setHours(dueDate, hours), minutes);
             return isBefore(dueDateTime, now);
-          }
-          return true;
         }
-        return false;
+        return true;
+    }
+    return false;
+};
+
+function groupCompletedTasks(tasks: Task[]) {
+    const groups: Record<string, Task[]> = {};
+
+    for (const task of tasks) {
+        if (task.status !== 'completed' || !task.completedAt) continue;
+
+        const completedDate = parseISO(task.completedAt);
+        let label: string;
+
+        if (isToday(completedDate)) {
+            label = 'Today';
+        } else if (isYesterday(completedDate)) {
+            label = 'Yesterday';
+        } else if (isWithinInterval(completedDate, { start: addDays(new Date(), -7), end: new Date() })) {
+            label = 'This Week';
+        } else if (isWithinInterval(completedDate, { start: addDays(new Date(), -30), end: addDays(new Date(), -7) })) {
+            label = 'This Month';
+        } else {
+            label = format(completedDate, 'MMM d, yyyy');
+        }
+
+        if (!groups[label]) groups[label] = [];
+        groups[label].push(task);
+    }
+
+    return groups;
+}
+
+function groupTasks(tasks: Task[], t: (key: string) => string) {
+    const now = new Date();
+    const groups: Record<string, Task[]> = {
+        [t('overdue')]: [],
+        [t('today')]: [],
+        [t('tomorrow')]: [],
+        [t('thisWeek')]: [],
+        [t('later')]: [],
+        [t('noDueDate')]: [],
     };
 
-    function groupCompletedTasks(tasks: Task[]) {
-        const groups: Record<string, Task[]> = {};
-        
-        for (const task of tasks) {
-            if (task.status !== 'completed' || !task.completedAt) continue;
-            
-            const completedDate = parseISO(task.completedAt);
-            let label: string;
-            
-            if (isToday(completedDate)) {
-                label = 'Today';
-            } else if (isYesterday(completedDate)) {
-                label = 'Yesterday';
-            } else if (isWithinInterval(completedDate, { start: addDays(new Date(), -7), end: new Date() })) {
-                label = 'This Week';
-            } else if (isWithinInterval(completedDate, { start: addDays(new Date(), -30), end: addDays(new Date(), -7) })) {
-                label = 'This Month';
-            } else {
-                label = format(completedDate, 'MMM d, yyyy');
-            }
-            
-            if (!groups[label]) groups[label] = [];
-            groups[label].push(task);
-        }
-        
-        return groups;
+    const overdueKey = t('overdue');
+    const todayKey = t('today');
+    const tomorrowKey = t('tomorrow');
+    const thisWeekKey = t('thisWeek');
+    const laterKey = t('later');
+    const noDueDateKey = t('noDueDate');
+
+    for (const task of tasks) {
+        if (task.status === 'completed') continue;
+
+        const groupDate = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
+
+        if (!groupDate) { groups[noDueDateKey].push(task); continue; }
+
+        if (task.dueDate && isOverdue(task)) { groups[overdueKey].push(task); continue; }
+
+        if (isToday(groupDate)) { groups[todayKey].push(task); continue; }
+        if (isTomorrow(groupDate)) { groups[tomorrowKey].push(task); continue; }
+        if (isWithinInterval(groupDate, { start: now, end: addDays(now, 7) })) { groups[thisWeekKey].push(task); continue; }
+        groups[laterKey].push(task);
     }
 
-    function groupTasks(tasks: Task[], t: (key: string) => string) {
-        const now = new Date();
-        const groups: Record<string, Task[]> = {
-            [t('overdue')]: [],
-            [t('today')]: [],
-            [t('tomorrow')]: [],
-            [t('thisWeek')]: [],
-            [t('later')]: [],
-            [t('noDueDate')]: [],
-        };
-
-        const overdueKey = t('overdue');
-        const todayKey = t('today');
-        const tomorrowKey = t('tomorrow');
-        const thisWeekKey = t('thisWeek');
-        const laterKey = t('later');
-        const noDueDateKey = t('noDueDate');
-
-        for (const task of tasks) {
-            if (task.status === 'completed') continue;
-            
-            const groupDate = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
-            
-            if (!groupDate) { groups[noDueDateKey].push(task); continue; }
-            
-            if (task.dueDate && isOverdue(task)) { groups[overdueKey].push(task); continue; }
-            
-            if (isToday(groupDate)) { groups[todayKey].push(task); continue; }
-            if (isTomorrow(groupDate)) { groups[tomorrowKey].push(task); continue; }
-            if (isWithinInterval(groupDate, { start: now, end: addDays(now, 7) })) { groups[thisWeekKey].push(task); continue; }
-            groups[laterKey].push(task);
-        }
-
-        return groups;
-    }
+    return groups;
+}
 
 export default function Tasks() {
     const { tasks, plans, addTask, updateTask, deleteTask, updatePlan } = useFirestore();
@@ -166,6 +166,7 @@ export default function Tasks() {
     const [isClosing, setIsClosing] = useState(false);
     const [completedGroupsExpanded, setCompletedGroupsExpanded] = useState<Record<string, boolean>>({});
     const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+    const [infoBoxTaskId, setInfoBoxTaskId] = useState<string | null>(null);
 
     const closeToast = useCallback(() => setToast(null), []);
 
@@ -269,7 +270,7 @@ export default function Tasks() {
     const handleToggleComplete = async (task: Task) => {
         const now = new Date();
         const todayStr = format(now, 'yyyy-MM-dd');
-        
+
         const taskDate = task.startDate || task.dueDate;
         if (!taskDate) {
             const next = task.status === 'completed' ? 'pending' : 'completed';
@@ -281,7 +282,7 @@ export default function Tasks() {
         }
 
         const taskDateStr = taskDate.split('T')[0];
-        
+
         if (task.status !== 'completed' && taskDateStr > todayStr) {
             setToast({ type: 'error', message: `Cannot complete future tasks. Complete from Today only.` });
             return;
@@ -295,7 +296,7 @@ export default function Tasks() {
 
         if (next === 'completed' && task.recurring !== 'none') {
             const today = new Date();
-            
+
             if (task.dueDate) {
                 const dueDate = parseISO(task.dueDate);
                 if (isBefore(dueDate, today)) {
@@ -320,7 +321,7 @@ export default function Tasks() {
     const createNextRecurringTask = async (task: Task, baseDate: Date) => {
         let newDueDate = '';
         let newStartDate = '';
-        
+
         if (task.recurring === 'daily') {
             newStartDate = format(addDays(baseDate, 1), 'yyyy-MM-dd');
             newDueDate = task.dueDate ? format(addDays(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
@@ -334,7 +335,7 @@ export default function Tasks() {
             newStartDate = format(addYears(baseDate, 1), 'yyyy-MM-dd');
             newDueDate = task.dueDate ? format(addYears(parseISO(task.dueDate), 1), 'yyyy-MM-dd') : '';
         }
-        
+
         if (newStartDate) {
             await addTask({
                 title: task.title,
@@ -605,7 +606,7 @@ export default function Tasks() {
                                                 </button>
                                             </div>
                                         </div>
-                                        
+
                                         {/* Expandable Confirm/Cancel buttons */}
                                         <AnimatePresence>
                                             {expandedTaskId === task.id && (
@@ -616,32 +617,65 @@ export default function Tasks() {
                                                     transition={{ duration: 0.2 }}
                                                     className="overflow-hidden"
                                                 >
-                                                    <div className="flex gap-2 pt-2 pl-8">
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleToggleComplete(task);
-                                                                setExpandedTaskId(null);
-                                                                setToast({ 
-                                                                    type: 'success', 
-                                                                    message: task.status === 'completed' ? 'Task restored!' : 'Task completed successfully!' 
-                                                                });
-                                                            }}
-                                                            className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${task.status === 'completed' ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 hover:bg-amber-500/30' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'}`}
-                                                        >
-                                                            <CheckCircle2 className="w-4 h-4" />
-                                                            {task.status === 'completed' ? 'Restore' : 'Complete'}
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setExpandedTaskId(null);
-                                                            }}
-                                                            className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-sm font-medium hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                            Cancel
-                                                        </button>
+                                                    <div className="flex flex-col gap-2 pt-2 pl-8">
+                                                        <div className="flex gap-2">
+                                                            {(() => {
+                                                                const taskDateObj = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
+                                                                const isTomorrowTask = taskDateObj ? isTomorrow(taskDateObj) : false;
+
+                                                                if (isTomorrowTask && task.status !== 'completed') {
+                                                                    return (
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(task.id); }}
+                                                                            className="flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 bg-yellow-500/10 border-yellow-400/30 text-yellow-300 hover:bg-yellow-500/20"
+                                                                        >
+                                                                            <Lightbulb className="w-4 h-4" />
+                                                                            Tip
+                                                                        </button>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleToggleComplete(task);
+                                                                            setExpandedTaskId(null);
+                                                                            setToast({
+                                                                                type: 'success',
+                                                                                message: task.status === 'completed' ? 'Task restored!' : 'Task completed successfully!'
+                                                                            });
+                                                                        }}
+                                                                        className={`flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 ${task.status === 'completed' ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 hover:bg-amber-500/30' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'}`}
+                                                                    >
+                                                                        <CheckCircle2 className="w-4 h-4" />
+                                                                        {task.status === 'completed' ? 'Restore' : 'Complete'}
+                                                                    </button>
+                                                                );
+                                                            })()}
+
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setExpandedTaskId(null);
+                                                                }}
+                                                                className="flex-1 py-2 px-4 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-sm font-medium hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+
+                                                        {infoBoxTaskId === task.id && (
+                                                            <div className="pl-2 pr-2 w-full">
+                                                                <div className="rounded-lg p-3 bg-amber-900/20 border border-amber-400/20 text-amber-100 text-sm flex items-start justify-between gap-2">
+                                                                    <div>Can't complete tomorrow task — only today tasks can be completed.</div>
+                                                                    <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
+                                                                        <X className="w-4 h-4 text-slate-300" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             )}
@@ -664,21 +698,21 @@ export default function Tasks() {
                                 {Object.values(groupedCompleted).flat().length}
                             </span>
                         </div>
-                        
+
                         {completedGroupOrder.map(groupName => {
                             const items = groupedCompleted[groupName];
                             if (!items || items.length === 0) return null;
-                            
+
                             const isExpanded = completedGroupsExpanded[groupName] ?? true;
-                            
+
                             return (
                                 <div key={groupName} className="mb-4">
                                     <button
                                         onClick={() => setCompletedGroupsExpanded(prev => ({ ...prev, [groupName]: !prev[groupName] }))}
                                         className="flex items-center gap-3 w-full mb-2 hover:bg-white/5 p-3 rounded-lg transition-all min-h-[44px]"
                                     >
-                                        <svg 
-                                            className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} 
+                                        <svg
+                                            className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
                                             fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                         >
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -688,7 +722,7 @@ export default function Tasks() {
                                         </h3>
                                         <span className="text-xs text-slate-500 bg-white/5 px-2.5 py-1 rounded-full">{items.length}</span>
                                     </button>
-                                    
+
                                     <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                                         <div className="space-y-2 pl-4">
                                             {items.map(task => (
@@ -703,7 +737,7 @@ export default function Tasks() {
                                                     >
                                                         <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                                                     </button>
-                                                    
+
                                                     <div className="flex-1 min-w-0">
                                                         <p className="font-medium text-sm line-through text-slate-500">{task.title}</p>
                                                     </div>
