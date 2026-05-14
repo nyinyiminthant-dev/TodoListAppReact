@@ -252,11 +252,22 @@ export default function Tasks() {
 
     const handleToggleComplete = async (task: Task) => {
         const now = new Date();
-        const todayStart = startOfDay(now);
-        const taskStartDate = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
+        const todayStr = format(now, 'yyyy-MM-dd');
         
-        if (task.status !== 'completed' && taskStartDate && isAfter(parseISO(task.startDate || task.dueDate!), todayStart)) {
-            setToast({ type: 'error', message: `Cannot complete future tasks. Complete from ${format(parseISO(task.startDate || task.dueDate!), 'MMM d')} only.` });
+        const taskDate = task.startDate || task.dueDate;
+        if (!taskDate) {
+            const next = task.status === 'completed' ? 'pending' : 'completed';
+            await updateTask(task.id, {
+                status: next,
+                completedAt: next === 'completed' ? new Date().toISOString() : null,
+            });
+            return;
+        }
+
+        const taskDateStr = taskDate.split('T')[0];
+        
+        if (task.status !== 'completed' && taskDateStr > todayStr) {
+            setToast({ type: 'error', message: `Cannot complete future tasks. Complete from Today only.` });
             return;
         }
 
