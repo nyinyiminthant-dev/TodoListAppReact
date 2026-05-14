@@ -237,6 +237,11 @@ export default function Tasks() {
             return;
         }
 
+        if (!editingTask && !formData.startDate) {
+            setToast({ type: 'error', message: 'Please select a start date to create a task' });
+            return;
+        }
+
         setSubmitting(true);
         setToast({ type: 'loading', message: editingTask ? 'Saving changes…' : 'Adding task…' });
 
