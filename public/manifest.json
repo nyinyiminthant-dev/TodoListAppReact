@@ -16,8 +16,8 @@
     "identity"
   ],
   "host_permissions": [
-    "https://*.firebaseapp.com",
-    "https://*.firebasestorage.app",
-    "https://*.googleapis.com"
+    "https://*.firebaseapp.com/*",
+    "https://*.firebasestorage.app/*",
+    "https://*.googleapis.com/*"
   ]
 }
