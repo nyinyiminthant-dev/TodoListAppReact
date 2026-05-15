@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
     Plus, Search, SlidersHorizontal, X, Circle, CheckCircle2,
     Pencil, Trash2, ArrowUpDown, Calendar, Clock, RefreshCw, Tag, Link2,
-    Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays, PlayCircle, Lightbulb
+    Briefcase, User2, HeartPulse, ShoppingBag, BookOpen, CalendarDays, PlayCircle, Lightbulb, AlertTriangle
 } from 'lucide-react';
 import { useFirestore } from '../contexts/FirestoreContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -269,7 +269,7 @@ export default function Tasks() {
 
     const handleToggleComplete = async (task: Task) => {
         const now = new Date();
-        const todayStr = format(now, 'yyyy-MM-dd');
+        const todayStart = startOfDay(now);
 
         const taskDate = task.startDate || task.dueDate;
         if (!taskDate) {
@@ -280,10 +280,15 @@ export default function Tasks() {
             });
             return;
         }
+        // Parse date and compare by day to avoid timezone/string issues
+        let parsedTaskDate: Date;
+        try {
+            parsedTaskDate = parseISO(taskDate);
+        } catch {
+            parsedTaskDate = new Date(taskDate);
+        }
 
-        const taskDateStr = taskDate.split('T')[0];
-
-        if (task.status !== 'completed' && taskDateStr > todayStr) {
+        if (task.status !== 'completed' && isAfter(startOfDay(parsedTaskDate), todayStart)) {
             setToast({ type: 'error', message: `Cannot complete future tasks. Complete from Today only.` });
             return;
         }
@@ -622,8 +627,22 @@ export default function Tasks() {
                                                             {(() => {
                                                                 const taskDateObj = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
                                                                 const isTomorrowTask = taskDateObj ? isTomorrow(taskDateObj) : false;
+                                                                const isOverdueTask = isOverdue(task);
 
-                                                                if (isTomorrowTask && task.status !== 'completed') {
+                                                                // For tomorrow and overdue tasks, show a tip button instead of the Complete button
+                                                                if ((isTomorrowTask || isOverdueTask) && task.status !== 'completed') {
+                                                                    if (isOverdueTask) {
+                                                                        return (
+                                                                            <button
+                                                                                onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(task.id); }}
+                                                                                className="flex-1 py-2 px-4 rounded-lg border text-sm font-medium transition-all flex items-center justify-center gap-2 bg-rose-500/10 border-rose-500/30 text-rose-300 hover:bg-rose-500/20"
+                                                                            >
+                                                                                <AlertTriangle className="w-4 h-4" />
+                                                                                Overdue
+                                                                            </button>
+                                                                        );
+                                                                    }
+
                                                                     return (
                                                                         <button
                                                                             onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(task.id); }}
@@ -676,12 +695,32 @@ export default function Tasks() {
                                                                     transition={{ duration: 0.18 }}
                                                                     className="pl-2 pr-2 w-full overflow-hidden"
                                                                 >
-                                                                    <div className="rounded-lg p-3 bg-amber-900/20 border border-amber-400/20 text-amber-100 text-sm flex items-start justify-between gap-2">
-                                                                        <div>Can't complete tomorrow task — only today tasks can be completed.</div>
-                                                                        <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
-                                                                            <X className="w-4 h-4 text-slate-300" />
-                                                                        </button>
-                                                                    </div>
+                                                                    {(() => {
+                                                                        const taskDateObj = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
+                                                                        const isTomorrowTask = taskDateObj ? isTomorrow(taskDateObj) : false;
+                                                                        const isOverdueTask = isOverdue(task);
+
+                                                                        if (isOverdueTask) {
+                                                                            return (
+                                                                                <div className="rounded-lg p-3 bg-rose-900/20 border border-rose-500/20 text-rose-100 text-sm flex items-start justify-between gap-2">
+                                                                                    <div>Can not complete overdue task.</div>
+                                                                                    <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
+                                                                                        <X className="w-4 h-4 text-slate-300" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            );
+                                                                        }
+
+                                                                        // default: tomorrow tip
+                                                                        return (
+                                                                            <div className="rounded-lg p-3 bg-amber-900/20 border border-amber-400/20 text-amber-100 text-sm flex items-start justify-between gap-2">
+                                                                                <div>Can't complete tomorrow task — only today tasks can be completed.</div>
+                                                                                <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
+                                                                                    <X className="w-4 h-4 text-slate-300" />
+                                                                                </button>
+                                                                            </div>
+                                                                        );
+                                                                    })()}
                                                                 </motion.div>
                                                             )}
                                                         </AnimatePresence>
