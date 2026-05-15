@@ -960,7 +960,7 @@ export default function Tasks() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startDate')}</label>
-                                    <input type="date" className="input" value={formData.startDate} onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))} />
+                                    <input type="date" className="input" value={formData.startDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))} />
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('startTime')}</label>
@@ -968,7 +968,7 @@ export default function Tasks() {
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueDate')}</label>
-                                    <input type="date" className="input" value={formData.dueDate} onChange={e => setFormData(f => ({ ...f, dueDate: e.target.value }))} />
+                                    <input type="date" className="input" value={formData.dueDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData(f => ({ ...f, dueDate: e.target.value }))} />
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('dueTime')}</label>
