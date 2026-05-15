@@ -155,14 +155,14 @@ export default function Plans() {
             completed: [],
             overdue: [],
         };
-        
+
         for (const plan of plansWithStatus) {
             if (plan.calculatedStatus === 'on_track') groups.on_track.push(plan);
             else if (plan.calculatedStatus === 'at_risk') groups.at_risk.push(plan);
             else if (plan.calculatedStatus === 'completed') groups.completed.push(plan);
             else groups.overdue.push(plan);
         }
-        
+
         return groups;
     }, [plansWithStatus]);
 
@@ -345,10 +345,10 @@ export default function Plans() {
                     <p className="text-slate-400 text-sm mt-1">{plans.length} {t('totalGoals')}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    <AIPlanAssistant 
-                      onApply={handleAIApply} 
-                      existingPlans={plans}
-                      existingTasks={tasks.map(t => ({ title: t.title, dueDate: t.dueDate }))}
+                    <AIPlanAssistant
+                        onApply={handleAIApply}
+                        existingPlans={plans}
+                        existingTasks={tasks.map(t => ({ title: t.title, dueDate: t.dueDate }))}
                     />
                     <button
                         onClick={() => { resetForm(); setShowForm(true); }}
@@ -412,17 +412,17 @@ export default function Plans() {
                     {planGroupOrder.map(group => {
                         const groupPlans = groupedPlans[group.key];
                         if (groupPlans.length === 0) return null;
-                        
+
                         const isExpanded = planGroupsExpanded[group.key] ?? true;
-                        
+
                         return (
                             <div key={group.key}>
                                 <button
                                     onClick={() => setPlanGroupsExpanded(prev => ({ ...prev, [group.key]: !prev[group.key] }))}
                                     className="flex items-center gap-3 w-full mb-3 hover:bg-white/5 p-3 rounded-lg transition-all min-h-[48px]"
                                 >
-                                    <svg 
-                                        className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} 
+                                    <svg
+                                        className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
                                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                         style={{ color: group.color }}
                                     >
@@ -433,102 +433,102 @@ export default function Plans() {
                                     </h3>
                                     <span className="text-xs text-slate-500 bg-white/5 px-2.5 py-1 rounded-full">{groupPlans.length}</span>
                                 </button>
-                                
+
                                 {isExpanded && (
                                     <div className="space-y-4 animate-fade-in">
                                         {groupPlans.map(plan => {
-                        const pct = plan.targetCount > 0 ? (plan.completedCount / plan.targetCount) * 100 : 0;
-                        const cfg = statusConfig[plan.calculatedStatus];
-                        const daysLeft = differenceInDays(toDate(plan.targetDate), new Date());
-                        const isExpanded = selectedPlan === plan.id;
+                                            const pct = plan.targetCount > 0 ? (plan.completedCount / plan.targetCount) * 100 : 0;
+                                            const cfg = statusConfig[plan.calculatedStatus];
+                                            const daysLeft = differenceInDays(toDate(plan.targetDate), new Date());
+                                            const isExpanded = selectedPlan === plan.id;
 
-                        return (
-                            <div key={plan.id} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden hover:border-white/20 transition-all">
-                                {/* Status bar */}
-                                <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${cfg.color} ${Math.min(pct, 100)}%, rgba(255,255,255,0.06) 0%)` }} />
+                                            return (
+                                                <div key={plan.id} className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden hover:border-white/20 transition-all">
+                                                    {/* Status bar */}
+                                                    <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${cfg.color} ${Math.min(pct, 100)}%, rgba(255,255,255,0.06) 0%)` }} />
 
-                                <div className="p-5">
-                                    <div className="flex items-start gap-4">
-                                        {/* Circular progress */}
-                                        <div className="shrink-0">
-                                            <CircularProgress percentage={pct} color={cfg.color} size={64} />
-                                        </div>
+                                                    <div className="p-5">
+                                                        <div className="flex items-start gap-4">
+                                                            {/* Circular progress */}
+                                                            <div className="shrink-0">
+                                                                <CircularProgress percentage={pct} color={cfg.color} size={64} />
+                                                            </div>
 
-                                        {/* Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                <h3 className="text-white font-semibold truncate">{plan.title}</h3>
-                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: cfg.bg, color: cfg.color }}>{t(cfg.labelKey as any)}</span>
-                                            </div>
-                                            {plan.description && <p className="text-xs text-slate-400 mb-2 truncate">{plan.description}</p>}
-                                            <div className="flex flex-wrap gap-3 text-xs text-slate-400">
-                                                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{format(toDate(plan.targetDate), 'MMM d, yyyy')}</span>
-                                                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{plan.completedCount} / {plan.targetCount}</span>
-                                                <span style={{ color: daysLeft < 0 ? '#ef4444' : daysLeft < 3 ? '#f59e0b' : '#94a3b8' }}>
-                                                    {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : `${daysLeft}d left`}
-                                                </span>
-                                            </div>
-                                        </div>
+                                                            {/* Info */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                                    <h3 className="text-white font-semibold truncate">{plan.title}</h3>
+                                                                    <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: cfg.bg, color: cfg.color }}>{t(cfg.labelKey as any)}</span>
+                                                                </div>
+                                                                {plan.description && <p className="text-xs text-slate-400 mb-2 truncate">{plan.description}</p>}
+                                                                <div className="flex flex-wrap gap-3 text-xs text-slate-400">
+                                                                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{format(toDate(plan.targetDate), 'MMM d, yyyy')}</span>
+                                                                    <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{plan.completedCount} / {plan.targetCount}</span>
+                                                                    <span style={{ color: daysLeft < 0 ? '#ef4444' : daysLeft < 3 ? '#f59e0b' : '#94a3b8' }}>
+                                                                        {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : daysLeft === 0 ? 'Due today' : `${daysLeft}d left`}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
 
-                                        {/* Actions */}
-                                        <div className="flex gap-1 shrink-0">
-                                            <button onClick={() => setSelectedPlan(isExpanded ? null : plan.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all">
-                                                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                            </button>
-                                            <button onClick={() => handleEdit(plan)} className="p-1.5 rounded-lg text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 transition-all">
-                                                <Pencil className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => setConfirmDelete({ id: plan.id, title: plan.title })} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Linked tasks */}
-                                    {isExpanded && (
-                                        <div className="mt-4 pt-4 border-t border-white/10 animate-slide-in">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <p className="text-xs text-slate-400 font-medium">{t('linkedTasks')} ({linkedTasks.length})</p>
-                                                <button
-                                                    onClick={() => handleAIGenerateTasks(plan)}
-                                                    disabled={generatingTasks}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-500/20 to-cyan-500/20 border border-teal-500/30 text-teal-400 text-xs font-medium hover:from-teal-500/30 hover:to-cyan-500/30 transition-all disabled:opacity-50"
-                                                >
-                                                    {generatingTasks ? (
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                    ) : (
-                                                        <Sparkles className="w-3.5 h-3.5" />
-                                                    )}
-                                                    {t('generateMoreTasks')}
-                                                </button>
-                                            </div>
-                                            {linkedTasks.length === 0 ? (
-                                                <p className="text-xs text-slate-500">{t('noTasksLinked')}</p>
-                                            ) : (
-                                                <div className="space-y-1.5">
-                                                    {linkedTasks.map(t => (
-                                                        <div key={t.id} className="flex items-center gap-2 text-xs">
-                                                            <CheckCircle2 className={`w-3.5 h-3.5 ${t.status === 'completed' ? 'text-emerald-400' : 'text-slate-600'}`} />
-                                                            <span className={t.status === 'completed' ? 'line-through text-slate-500' : 'text-slate-300'}>{t.title}</span>
+                                                            {/* Actions */}
+                                                            <div className="flex gap-1 shrink-0">
+                                                                <button onClick={() => setSelectedPlan(isExpanded ? null : plan.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                                                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                                </button>
+                                                                <button onClick={() => handleEdit(plan)} className="p-1.5 rounded-lg text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 transition-all">
+                                                                    <Pencil className="w-4 h-4" />
+                                                                </button>
+                                                                <button onClick={() => setConfirmDelete({ id: plan.id, title: plan.title })} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    ))}
+
+                                                        {/* Linked tasks */}
+                                                        {isExpanded && (
+                                                            <div className="mt-4 pt-4 border-t border-white/10 animate-slide-in">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <p className="text-xs text-slate-400 font-medium">{t('linkedTasks')} ({linkedTasks.length})</p>
+                                                                    <button
+                                                                        onClick={() => handleAIGenerateTasks(plan)}
+                                                                        disabled={generatingTasks}
+                                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-teal-500/20 to-cyan-500/20 border border-teal-500/30 text-teal-400 text-xs font-medium hover:from-teal-500/30 hover:to-cyan-500/30 transition-all disabled:opacity-50"
+                                                                    >
+                                                                        {generatingTasks ? (
+                                                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                                        ) : (
+                                                                            <Sparkles className="w-3.5 h-3.5" />
+                                                                        )}
+                                                                        {t('generateMoreTasks')}
+                                                                    </button>
+                                                                </div>
+                                                                {linkedTasks.length === 0 ? (
+                                                                    <p className="text-xs text-slate-500">{t('noTasksLinked')}</p>
+                                                                ) : (
+                                                                    <div className="space-y-1.5">
+                                                                        {linkedTasks.map(t => (
+                                                                            <div key={t.id} className="flex items-center gap-2 text-xs">
+                                                                                <CheckCircle2 className={`w-3.5 h-3.5 ${t.status === 'completed' ? 'text-emerald-400' : 'text-slate-600'}`} />
+                                                                                <span className={t.status === 'completed' ? 'line-through text-slate-500' : 'text-slate-300'}>{t.title}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {linkedTasks.length > 0 && (
+                                                                    <button
+                                                                        onClick={() => setTasksModal(plan)}
+                                                                        className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-xs font-medium hover:bg-white/10 hover:text-white transition-all"
+                                                                    >
+                                                                        <ExternalLink className="w-3.5 h-3.5" />
+                                                                        {t('viewInTasks')}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            )}
-                                            {linkedTasks.length > 0 && (
-                                                <button
-                                                    onClick={() => setTasksModal(plan)}
-                                                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-xs font-medium hover:bg-white/10 hover:text-white transition-all"
-                                                >
-                                                    <ExternalLink className="w-3.5 h-3.5" />
-                                                    {t('viewInTasks')}
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                                    })}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -799,8 +799,8 @@ export default function Plans() {
                                             )}
                                         </div>
                                         <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${task.priority === 'high' ? 'bg-rose-500/20 text-rose-400' :
-                                                task.priority === 'medium' ? 'bg-amber-500/20 text-amber-400' :
-                                                    'bg-emerald-500/20 text-emerald-400'
+                                            task.priority === 'medium' ? 'bg-amber-500/20 text-amber-400' :
+                                                'bg-emerald-500/20 text-emerald-400'
                                             }`}>
                                             {task.priority}
                                         </span>
