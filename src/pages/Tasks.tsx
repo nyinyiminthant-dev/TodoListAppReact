@@ -628,9 +628,10 @@ export default function Tasks() {
                                                                 const taskDateObj = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
                                                                 const isTomorrowTask = taskDateObj ? isTomorrow(taskDateObj) : false;
                                                                 const isOverdueTask = isOverdue(task);
+                                                                const isLaterTask = taskDateObj ? isAfter(startOfDay(taskDateObj), addDays(startOfDay(new Date()), 7)) : false;
 
-                                                                // For tomorrow and overdue tasks, show a tip button instead of the Complete button
-                                                                if ((isTomorrowTask || isOverdueTask) && task.status !== 'completed') {
+                                                                // For tomorrow, later, and overdue tasks, show a tip button instead of the Complete button
+                                                                if ((isTomorrowTask || isOverdueTask || isLaterTask) && task.status !== 'completed') {
                                                                     if (isOverdueTask) {
                                                                         return (
                                                                             <button
@@ -642,7 +643,6 @@ export default function Tasks() {
                                                                             </button>
                                                                         );
                                                                     }
-
                                                                     return (
                                                                         <button
                                                                             onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(task.id); }}
@@ -699,11 +699,23 @@ export default function Tasks() {
                                                                         const taskDateObj = task.startDate ? parseISO(task.startDate) : (task.dueDate ? parseISO(task.dueDate) : null);
                                                                         const isTomorrowTask = taskDateObj ? isTomorrow(taskDateObj) : false;
                                                                         const isOverdueTask = isOverdue(task);
+                                                                        const isLaterTask = taskDateObj ? isAfter(startOfDay(taskDateObj), addDays(startOfDay(new Date()), 7)) : false;
 
                                                                         if (isOverdueTask) {
                                                                             return (
                                                                                 <div className="rounded-lg p-3 bg-rose-900/20 border border-rose-500/20 text-rose-100 text-sm flex items-start justify-between gap-2">
                                                                                     <div>Can not complete overdue task.</div>
+                                                                                    <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
+                                                                                        <X className="w-4 h-4 text-slate-300" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            );
+                                                                        }
+
+                                                                        if (isLaterTask) {
+                                                                            return (
+                                                                                <div className="rounded-lg p-3 bg-amber-900/20 border border-amber-400/20 text-amber-100 text-sm flex items-start justify-between gap-2">
+                                                                                    <div>Later task can't be complete only today tasks can be completed</div>
                                                                                     <button onClick={(e) => { e.stopPropagation(); setInfoBoxTaskId(null); }} className="p-1 rounded-md hover:bg-white/5">
                                                                                         <X className="w-4 h-4 text-slate-300" />
                                                                                     </button>
