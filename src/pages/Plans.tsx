@@ -554,11 +554,11 @@ export default function Plans() {
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
                                 <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('title')} *</label>
-                                <input className="input" placeholder="e.g. Complete 30 workouts" value={formData.title} onChange={e => setFormData(f => ({ ...f, title: e.target.value }))} required autoFocus />
+                                <input className="input no-arrow" placeholder="e.g. Complete 30 workouts" value={formData.title} onChange={e => setFormData(f => ({ ...f, title: e.target.value }))} required autoFocus />
                             </div>
                             <div>
                                 <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('description')}</label>
-                                <textarea className="input resize-none" rows={2} placeholder="Optional details…" value={formData.description} onChange={e => setFormData(f => ({ ...f, description: e.target.value }))} />
+                                <textarea className="input resize-none no-arrow" rows={2} placeholder="Optional details…" value={formData.description} onChange={e => setFormData(f => ({ ...f, description: e.target.value }))} />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
