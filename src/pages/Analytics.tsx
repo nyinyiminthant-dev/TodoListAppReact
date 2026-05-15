@@ -92,15 +92,15 @@ export default function Analytics() {
     }, [tasks, dateRange]);
 
     const weeklyData = useMemo(() => {
-        const weeks = eachWeekOfInterval({ start: dateRange.start, end: dateRange.end });
-        return weeks.map(weekStart => {
-            const weekEnd = endOfWeek(weekStart);
-            const weekTasks = tasks.filter(t => t.dueDate && isWithinInterval(parseISO(t.dueDate), { start: weekStart, end: weekEnd }));
+        // For the week view we want daily points across the selected week
+        const days = eachDayOfInterval({ start: dateRange.start, end: dateRange.end });
+        return days.map(day => {
+            const dayTasks = tasks.filter(t => t.dueDate && isSameDay(parseISO(t.dueDate), day));
             return {
-                week: `${format(weekStart, 'MMM d')}`,
-                weekFull: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
-                completed: weekTasks.filter(t => t.status === 'completed').length,
-                total: weekTasks.length,
+                date: format(day, 'EEE d'),
+                dateFull: format(day, 'EEEE, MMM d, yyyy'),
+                completed: dayTasks.filter(t => t.status === 'completed').length,
+                total: dayTasks.length,
             };
         });
     }, [tasks, dateRange]);
@@ -184,11 +184,11 @@ export default function Analytics() {
                         {viewType === 'week' ? (
                             <LineChart data={weeklyData} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                                <XAxis dataKey="week" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} interval={0} dy={5} />
+                                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} interval={0} dy={5} />
                                 <YAxis allowDecimals={false} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} labelFormatter={(label) => {
-                                    const data = weeklyData.find(d => d.week === label);
-                                    return data?.weekFull || label;
+                                    const data = weeklyData.find(d => d.date === label);
+                                    return data?.dateFull || label;
                                 }} />
                                 <Line type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2.5} dot={{ fill: '#6366f1', r: 4 }} activeDot={{ r: 6 }} name={t('completed')} />
                                 <Line type="monotone" dataKey="total" stroke="#a5b4fc" strokeWidth={2} dot={{ fill: '#a5b4fc', r: 3 }} name={t('total')} />
