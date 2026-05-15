@@ -136,12 +136,19 @@ body {
     color: var(--text-subtle);
 }
 
-.input, select.input {
+.input,
+select.input {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     padding-right: 2.5rem;
+}
+
+/* Utility to remove the dropdown/chevron background for inputs where not desired */
+.no-arrow {
+    background-image: none !important;
+    padding-right: 0.75rem !important;
 }
 
 select.input {
@@ -297,9 +304,12 @@ select.input {
 }
 
 @keyframes borderPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         border-color: rgb(167, 139, 250);
     }
+
     50% {
         border-color: rgb(196, 181, 253);
     }
@@ -575,6 +585,7 @@ select.input {
         transform: translateY(-100%);
         opacity: 0;
     }
+
     100% {
         transform: translateY(0);
         opacity: 1;
@@ -585,6 +596,7 @@ select.input {
     0% {
         width: 100%;
     }
+
     100% {
         width: 0%;
     }

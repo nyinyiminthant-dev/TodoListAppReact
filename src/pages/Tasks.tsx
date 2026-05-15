@@ -826,7 +826,7 @@ export default function Tasks() {
                             <div>
                                 <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('title')} *</label>
                                 <input
-                                    className="input"
+                                    className="input no-arrow"
                                     placeholder={t('description')}
                                     value={formData.title}
                                     onChange={e => setFormData(f => ({ ...f, title: e.target.value }))}
@@ -839,7 +839,7 @@ export default function Tasks() {
                             <div>
                                 <label className="text-xs font-medium text-slate-400 block mb-1.5">{t('description')}</label>
                                 <textarea
-                                    className="input resize-none"
+                                    className="input resize-none no-arrow"
                                     rows={2}
                                     placeholder={t('description')}
                                     value={formData.description}
