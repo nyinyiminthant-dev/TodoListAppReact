@@ -4,15 +4,17 @@ import { useAuth, AuthProvider } from './contexts/AuthContext';
 import { FirestoreProvider } from './contexts/FirestoreContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import Login from './pages/Login';
 import Loading from './components/Loading';
-import { LayoutDashboard, CheckSquare, BarChart3, Target } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BarChart3, Target, User } from 'lucide-react';
 
 const mobileNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Home' },
   { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { path: '/plans', icon: Target, label: 'Plans' },
   { path: '/analytics', icon: BarChart3, label: 'Stats' },
+  { path: '/profile', icon: User, label: 'Profile' },
 ];
 
 interface AppProviderProps { children: ReactNode; }
@@ -41,6 +43,8 @@ function AuthContent({ children }: { children: ReactNode }) {
         <div className="hidden lg:block w-72 shrink-0" aria-hidden="true" />
 
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+
+        <Header />
 
         <main className="flex-1 min-h-screen overflow-auto">
           <div className="max-w-6xl mx-auto px-6 pt-20 pb-32 lg:px-12 lg:py-12">

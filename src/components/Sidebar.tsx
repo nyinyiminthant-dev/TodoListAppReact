@@ -131,15 +131,6 @@ const handleEnableNotifications = async () => {
 
     return (
         <>
-            {/* Mobile hamburger button — only visible when sidebar is closed */}
-            <button
-                className={`lg:hidden fixed top-3 left-3 z-30 w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white transition-opacity duration-200 ${isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                onClick={() => setIsOpen(true)}
-                aria-label="Open sidebar"
-            >
-                <Menu className="w-5 h-5" />
-            </button>
-
             {/* Backdrop (mobile) */}
             {isOpen && (
                 <div
@@ -205,139 +196,7 @@ const handleEnableNotifications = async () => {
                     ))}
                 </nav>
 
-                {/* Appearance */}
-                <div className="px-3 py-2 border-t border-white/10">
-                    <button
-                        onClick={() => setAppearanceOpen(!appearanceOpen)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-                    >
-                        <Palette className="w-5 h-5 shrink-0" />
-                        <span className="font-medium text-sm flex-1 text-left">{t('appearance')}</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${appearanceOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateRows: appearanceOpen ? '1fr' : '0fr',
-                            transition: 'grid-template-rows 0.3s ease',
-                        }}
-                    >
-                        <div style={{ overflow: 'hidden' }}>
-                            <div
-                                className="mt-2 px-1 space-y-4 pb-1"
-                                style={{
-                                    opacity: appearanceOpen ? 1 : 0,
-                                    transition: 'opacity 0.25s ease',
-                                }}
-                            >
-                                {/* Mode */}
-                                <div>
-                                    <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 px-1">{t('mode')}</p>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setMode('dark')}
-                                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all border ${mode === 'dark'
-                                                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-                                                }`}
-                                        >
-                                            <Moon className="w-3.5 h-3.5" /> {t('dark')}
-                                        </button>
-                                        <button
-                                            onClick={() => setMode('light')}
-                                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all border ${mode === 'light'
-                                                ? 'bg-amber-400/20 border-amber-400/40 text-amber-600'
-                                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-                                                }`}
-                                        >
-                                            <Sun className="w-3.5 h-3.5" /> {t('light')}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Color theme */}
-                                <div>
-                                    <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2 px-1">{t('colorTheme')}</p>
-                                    <div className="grid grid-cols-3 gap-1.5">
-                                        {colorThemes.map(t => (
-                                            <button
-                                                key={t.id}
-                                                onClick={() => setColorTheme(t.id)}
-                                                className="flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl text-[11px] font-medium transition-all border"
-                                                style={colorTheme === t.id
-                                                    ? { background: `${t.color}22`, borderColor: `${t.color}80`, color: t.color }
-                                                    : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }
-                                                }
-                                            >
-                                                <span
-                                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] mb-1"
-                                                    style={{ background: t.color }}
-                                                >
-                                                    <t.Icon className="w-4 h-4 text-white" />
-                                                </span>
-                                                {t.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Language */}
-                <div className="px-3 py-2 border-t border-white/10">
-                    <button
-                        onClick={() => setLanguageOpen(!languageOpen)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-                    >
-                        <Globe className="w-5 h-5 shrink-0" />
-                        <span className="font-medium text-sm flex-1 text-left">{t('language')}</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${languageOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    <div
-                        style={{
-                            display: 'grid',
-                            gridTemplateRows: languageOpen ? '1fr' : '0fr',
-                            transition: 'grid-template-rows 0.3s ease',
-                        }}
-                    >
-                        <div style={{ overflow: 'hidden' }}>
-                            <div
-                                className="mt-2 px-1"
-                                style={{
-                                    opacity: languageOpen ? 1 : 0,
-                                    transition: 'opacity 0.25s ease',
-                                }}
-                            >
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setLanguage('en')}
-                                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all border ${
-                                            language === 'en'
-                                                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-                                        }`}
-                                    >
-                                        🇬🇧 English
-                                    </button>
-                                    <button
-                                        onClick={() => setLanguage('my')}
-                                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all border ${
-                                            language === 'my'
-                                                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                                                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-                                        }`}
-                                    >
-                                        🇲🇲 မြန်မာ
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
 
                 {/* Settings */}
                 <div className="px-3 py-2 border-t border-white/10">
@@ -365,6 +224,94 @@ const handleEnableNotifications = async () => {
                                     transition: 'opacity 0.25s ease',
                                 }}
                             >
+                                {/* Appearance Sub-item */}
+                                <button
+                                    onClick={() => setAppearanceOpen(!appearanceOpen)}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
+                                >
+                                    <Palette className="w-4 h-4" />
+                                    <span className="flex-1 text-left">{t('appearance')}</span>
+                                    <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${appearanceOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                {appearanceOpen && (
+                                    <div className="ml-4 mt-1 space-y-2">
+                                        <div className="flex gap-1.5">
+                                            <button
+                                                onClick={() => setMode('dark')}
+                                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${mode === 'dark'
+                                                    ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
+                                                    : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                                                }`}
+                                            >
+                                                <Moon className="w-3 h-3" /> {t('dark')}
+                                            </button>
+                                            <button
+                                                onClick={() => setMode('light')}
+                                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${mode === 'light'
+                                                    ? 'bg-amber-400/20 border-amber-400/40 text-amber-600'
+                                                    : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                                                }`}
+                                            >
+                                                <Sun className="w-3 h-3" /> {t('light')}
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-1">
+                                            {colorThemes.map(ct => (
+                                                <button
+                                                    key={ct.id}
+                                                    onClick={() => setColorTheme(ct.id)}
+                                                    className="flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[10px] font-medium transition-all border"
+                                                    style={colorTheme === ct.id
+                                                        ? { background: `${ct.color}22`, borderColor: `${ct.color}80`, color: ct.color }
+                                                        : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#94a3b8' }
+                                                    }
+                                                >
+                                                    <span className="w-3.5 h-3.5 rounded-full" style={{ background: ct.color }} />
+                                                    {ct.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Language Sub-item */}
+                                <button
+                                    onClick={() => setLanguageOpen(!languageOpen)}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
+                                >
+                                    <Globe className="w-4 h-4" />
+                                    <span className="flex-1 text-left">{t('language')}</span>
+                                    <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${languageOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {languageOpen && (
+                                    <div className="ml-4 mt-1">
+                                        <div className="flex gap-1.5">
+                                            <button
+                                                onClick={() => setLanguage('en')}
+                                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                                                    language === 'en'
+                                                        ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
+                                                        : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                                                }`}
+                                            >
+                                                🇬🇧 EN
+                                            </button>
+                                            <button
+                                                onClick={() => setLanguage('my')}
+                                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                                                    language === 'my'
+                                                        ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
+                                                        : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                                                }`}
+                                            >
+                                                🇲🇲 MY
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={handleExport}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
@@ -412,9 +359,12 @@ const handleEnableNotifications = async () => {
                     </div>
                 </div>
 
-                {/* User card + Sign out */}
-                <div className="px-3 py-4 border-t border-white/10">
-                    <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/10 mb-2">
+                {/* User card + Sign out - Mobile only */}
+                <div className="lg:hidden px-3 py-4 border-t border-white/10">
+                    <button
+                        onClick={() => navigate('/profile')}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 border border-white/10 mb-2"
+                    >
                         {user?.photoURL ? (
                             <img src={user.photoURL} alt="avatar" className="w-9 h-9 rounded-full shrink-0" referrerPolicy="no-referrer" />
                         ) : (
@@ -426,7 +376,7 @@ const handleEnableNotifications = async () => {
                             <p className="text-white text-sm font-medium truncate">{user?.displayName ?? t('user')}</p>
                             <p className="text-slate-400 text-xs truncate">{user?.email ?? ''}</p>
                         </div>
-                    </div>
+                    </button>
 
                     <button
                         onClick={handleSignOut}

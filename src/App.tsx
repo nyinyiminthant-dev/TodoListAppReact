@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Analytics from './pages/Analytics';
 import Plans from './pages/Plans';
+import Profile from './pages/Profile';
 import InstallPWA from './components/InstallPWA';
 import UpdateBanner from './components/UpdateBanner';
 import { TaskNotificationPopup, useNotificationChecker } from './hooks/useNotificationChecker';
@@ -21,6 +22,7 @@ function AppContent() {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/plans" element={<Plans />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
       <InstallPWA />
       {updateAvailable && (
