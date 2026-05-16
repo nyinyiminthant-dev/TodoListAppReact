@@ -1,15 +1,18 @@
 import { motion } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { Trash2, LogOut, LucideIcon } from 'lucide-react';
 
 interface ConfirmDialogProps {
     title: string;
     message: string;
     confirmLabel?: string;
+    icon?: LucideIcon;
     onConfirm: () => void;
     onCancel: () => void;
 }
 
-export default function ConfirmDialog({ title, message, confirmLabel = 'Delete', onConfirm, onCancel }: ConfirmDialogProps) {
+export default function ConfirmDialog({ title, message, confirmLabel = 'Delete', icon: Icon = Trash2, onConfirm, onCancel }: ConfirmDialogProps) {
+    const isSignOut = Icon === LogOut;
+    
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -26,8 +29,12 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Delete',
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="w-full max-w-sm rounded-3xl bg-slate-900 border border-white/10 shadow-2xl p-6"
             >
-                <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto mb-4">
-                    <Trash2 className="w-7 h-7 text-rose-400" />
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+                    isSignOut 
+                        ? 'bg-rose-500/20 border border-rose-500/30' 
+                        : 'bg-rose-500/20 border border-rose-500/30'
+                }`}>
+                    <Icon className={`w-7 h-7 ${isSignOut ? 'text-rose-400' : 'text-rose-400'}`} />
                 </div>
 
                 <h3 className="text-white font-semibold text-center text-lg mb-1.5">{title}</h3>

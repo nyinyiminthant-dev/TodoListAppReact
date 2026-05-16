@@ -142,6 +142,7 @@ export default function Profile() {
                     title={t('signOut')}
                     message="Are you sure you want to sign out?"
                     confirmLabel={t('signOut')}
+                    icon={LogOut}
                     onConfirm={signOut}
                     onCancel={() => setShowSignOutConfirm(false)}
                 />

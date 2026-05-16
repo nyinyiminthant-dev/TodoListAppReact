@@ -159,6 +159,7 @@ export const translations = {
 
     // Common
     user: 'User',
+    signOut: 'Sign Out',
   },
 
   my: {
@@ -320,6 +321,7 @@ export const translations = {
 
     // Common
     user: 'အသုံးပြုသူ',
+    signOut: 'ထွက်မည်',
   },
 } as const;
 
