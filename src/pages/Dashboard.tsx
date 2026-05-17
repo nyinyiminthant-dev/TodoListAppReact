@@ -117,8 +117,8 @@ export default function Dashboard() {
       {/* Mobile Header - Greeting */}
       <div className="lg:hidden mb-6 md:mb-8">
         <div className="flex items-center gap-4 mb-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
+            <Sparkles className="w-7 h-7 text-white" />
           </div>
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-white">
