@@ -1,15 +1,82 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Sun, Moon, Sparkles, BookOpen, Briefcase, HeartPulse, Waves, Sunset } from 'lucide-react';
+import { useFirestore } from '../contexts/FirestoreContext';
+import { LogOut, Sun, Moon, Sparkles, BookOpen, Briefcase, HeartPulse, Waves, Sunset, Trash2, Bell, Upload, Download } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Profile() {
     const { user, signOut } = useAuth();
     const { language, setLanguage, t } = useLanguage();
     const { mode, colorTheme, setMode, setColorTheme } = useTheme();
+    const { clearAllData, exportData, importData } = useFirestore();
     const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const checkNotificationPermission = async () => {
+            if ('Notification' in window) {
+                setNotificationsEnabled(Notification.permission === 'granted');
+            }
+        };
+        checkNotificationPermission();
+    }, []);
+
+    const handleEnableNotifications = async () => {
+        try {
+            if (!('Notification' in window)) {
+                alert('Notifications not supported in this browser');
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                setNotificationsEnabled(true);
+            } else {
+                alert('Notification permission denied');
+            }
+        } catch (error) {
+            console.error('Failed:', error);
+        }
+    };
+
+    const handleClear = () => {
+        setShowClearConfirm(true);
+    };
+
+    const handleClearConfirm = () => {
+        clearAllData();
+        setShowClearConfirm(false);
+    };
+
+    const handleExport = () => {
+        const json = exportData();
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `todolist-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target?.result as string);
+                importData(data);
+            } catch {
+                alert('Invalid file format');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
 
     const colorThemes: { id: 'default' | 'study' | 'work' | 'health' | 'ocean' | 'sunset'; label: string; color: string; Icon: React.ComponentType<{ className?: string }> }[] = [
         { id: 'default', label: 'Default', color: '#6366f1', Icon: Sparkles },
@@ -126,6 +193,69 @@ export default function Profile() {
                             </div>
                         </div>
 
+                        {/* Export Data */}
+                        <button
+                            onClick={handleExport}
+                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
+                            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                        >
+                            <Download className="w-5 h-5" />
+                            <span className="font-medium">{t('exportData')}</span>
+                        </button>
+
+                        {/* Import Data */}
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
+                            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                        >
+                            <Upload className="w-5 h-5" />
+                            <span className="font-medium">{t('importData')}</span>
+                        </button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".json"
+                            className="hidden"
+                            onChange={handleImport}
+                        />
+
+                        {/* Clear All Data */}
+                        <button
+                            onClick={handleClear}
+                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
+                            style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e' }}
+                        >
+                            <Trash2 className="w-5 h-5" />
+                            <span className="font-medium">{t('clearAllData')}</span>
+                        </button>
+
+                        {/* Install App */}
+                        <button
+                            onClick={handleEnableNotifications}
+                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
+                            style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6' }}
+                        >
+                            <Sparkles className="w-5 h-5" />
+                            <span className="font-medium">Install App</span>
+                        </button>
+
+                        {/* Enable Notifications */}
+                        <button
+                            onClick={handleEnableNotifications}
+                            className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all ${
+                                notificationsEnabled ? 'bg-emerald-500/10' : ''
+                            }`}
+                            style={{ 
+                                background: notificationsEnabled ? 'rgba(16,185,129,0.1)' : 'var(--surface)', 
+                                border: `1px solid ${notificationsEnabled ? 'rgba(16,185,129,0.3)' : 'var(--border)'}`, 
+                                color: notificationsEnabled ? '#10b981' : 'var(--text-1)' 
+                            }}
+                        >
+                            <Bell className="w-5 h-5" />
+                            <span className="font-medium">{notificationsEnabled ? 'Notifications On' : t('enableNotifications')}</span>
+                        </button>
+
                         {/* Sign Out */}
                         <button
                             onClick={() => setShowSignOutConfirm(true)}
@@ -145,6 +275,17 @@ export default function Profile() {
                     icon={LogOut}
                     onConfirm={signOut}
                     onCancel={() => setShowSignOutConfirm(false)}
+                />
+            )}
+
+            {showClearConfirm && (
+                <ConfirmDialog
+                    title={t('clearAllData')}
+                    message="Are you sure you want to delete ALL tasks and plans? This cannot be undone."
+                    confirmLabel={t('delete')}
+                    icon={Trash2}
+                    onConfirm={handleClearConfirm}
+                    onCancel={() => setShowClearConfirm(false)}
                 />
             )}
         </div>
