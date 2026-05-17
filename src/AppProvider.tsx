@@ -44,10 +44,9 @@ function AuthContent({ children }: { children: ReactNode }) {
 
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-        <Header />
-
         <main className="flex-1 min-h-screen overflow-auto">
-          <div className="max-w-6xl mx-auto px-6 pt-20 pb-32 lg:px-12 lg:py-12">
+          <div className="max-w-6xl mx-auto px-6 pt-6 pb-32 lg:px-12 lg:py-6">
+            <Header />
             {children}
           </div>
         </main>

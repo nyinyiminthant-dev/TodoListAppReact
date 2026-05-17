@@ -196,21 +196,21 @@ export default function Profile() {
                         {/* Export Data */}
                         <button
                             onClick={handleExport}
-                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
-                            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                         >
-                            <Download className="w-5 h-5" />
-                            <span className="font-medium">{t('exportData')}</span>
+                            <Download className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                            <span className="font-medium" style={{ color: 'var(--text-1)' }}>{t('exportData')}</span>
                         </button>
 
                         {/* Import Data */}
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
-                            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-1)' }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                         >
-                            <Upload className="w-5 h-5" />
-                            <span className="font-medium">{t('importData')}</span>
+                            <Upload className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                            <span className="font-medium" style={{ color: 'var(--text-1)' }}>{t('importData')}</span>
                         </button>
                         <input
                             ref={fileInputRef}
@@ -223,37 +223,34 @@ export default function Profile() {
                         {/* Clear All Data */}
                         <button
                             onClick={handleClear}
-                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
-                            style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e' }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                         >
-                            <Trash2 className="w-5 h-5" />
-                            <span className="font-medium">{t('clearAllData')}</span>
+                            <Trash2 className="w-5 h-5" style={{ color: '#f43f5e' }} />
+                            <span className="font-medium" style={{ color: '#f43f5e' }}>{t('clearAllData')}</span>
                         </button>
 
                         {/* Install App */}
                         <button
                             onClick={handleEnableNotifications}
-                            className="w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all"
-                            style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6' }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                         >
-                            <Sparkles className="w-5 h-5" />
-                            <span className="font-medium">Install App</span>
+                            <Sparkles className="w-5 h-5" style={{ color: '#8b5cf6' }} />
+                            <span className="font-medium" style={{ color: 'var(--text-1)' }}>Install App</span>
                         </button>
 
                         {/* Enable Notifications */}
                         <button
                             onClick={handleEnableNotifications}
-                            className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl transition-all ${
-                                notificationsEnabled ? 'bg-emerald-500/10' : ''
-                            }`}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
                             style={{ 
                                 background: notificationsEnabled ? 'rgba(16,185,129,0.1)' : 'var(--surface)', 
-                                border: `1px solid ${notificationsEnabled ? 'rgba(16,185,129,0.3)' : 'var(--border)'}`, 
-                                color: notificationsEnabled ? '#10b981' : 'var(--text-1)' 
+                                border: `1px solid ${notificationsEnabled ? 'rgba(16,185,129,0.3)' : 'var(--border)'}`
                             }}
                         >
-                            <Bell className="w-5 h-5" />
-                            <span className="font-medium">{notificationsEnabled ? 'Notifications On' : t('enableNotifications')}</span>
+                            <Bell className="w-5 h-5" style={{ color: notificationsEnabled ? '#10b981' : 'var(--text-1)' }} />
+                            <span className="font-medium" style={{ color: notificationsEnabled ? '#10b981' : 'var(--text-1)' }}>{notificationsEnabled ? 'Notifications On' : t('enableNotifications')}</span>
                         </button>
 
                         {/* Sign Out */}

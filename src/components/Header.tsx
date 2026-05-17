@@ -40,7 +40,7 @@ export default function Header() {
     ];
 
     return (
-        <header className="hidden lg:flex fixed top-0 right-0 z-50 items-center gap-4 px-6 py-4" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+        <header className="hidden lg:flex items-center justify-end gap-4 px-4 py-3 rounded-xl mb-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             {/* Language Toggle */}
             <div className="relative" ref={langRef}>
                 <button
@@ -53,7 +53,7 @@ export default function Header() {
                 </button>
 
                 {langOpen && (
-                    <div className="absolute right-0 top-full mt-2 py-2 rounded-xl shadow-lg border"
+                    <div className="absolute right-0 top-full mt-2 py-2 rounded-xl shadow-lg border z-50"
                         style={{ background: 'var(--surface)', borderColor: 'var(--border)', minWidth: '200px' }}>
                         <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
                             <p className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{t('language')}</p>
@@ -82,20 +82,23 @@ export default function Header() {
             <div className="relative" ref={profileRef}>
                 <button
                     onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5 transition-all"
                 >
                     {user?.photoURL ? (
-                        <img src={user.photoURL} alt="avatar" className="w-9 h-9 rounded-full" referrerPolicy="no-referrer" />
+                        <img src={user.photoURL} alt="avatar" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
                     ) : (
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
                             style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
                             {user?.displayName?.[0] ?? 'U'}
                         </div>
                     )}
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>
+                        {user?.displayName ?? 'User'}
+                    </span>
                 </button>
 
                 {profileOpen && (
-                    <div className="absolute right-0 top-full mt-2 py-3 rounded-xl shadow-lg border"
+                    <div className="absolute right-0 top-full mt-2 py-3 rounded-xl shadow-lg border z-50"
                         style={{ background: 'var(--surface)', borderColor: 'var(--border)', minWidth: '280px' }}>
                         {/* Profile Info */}
                         <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
