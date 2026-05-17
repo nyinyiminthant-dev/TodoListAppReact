@@ -230,15 +230,15 @@ export default function Profile() {
                             <span className="font-medium" style={{ color: '#f43f5e' }}>{t('clearAllData')}</span>
                         </button>
 
-                        {/* Install App */}
-                        <button
+                        {/* Install App - Hidden on mobile */}
+                        {/* <button
                             onClick={handleEnableNotifications}
                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
                             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                         >
                             <Sparkles className="w-5 h-5" style={{ color: '#8b5cf6' }} />
                             <span className="font-medium" style={{ color: 'var(--text-1)' }}>Install App</span>
-                        </button>
+                        </button> */}
 
                         {/* Enable Notifications */}
                         <button

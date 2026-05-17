@@ -116,17 +116,17 @@ export default function Dashboard() {
     <div>
       {/* Mobile Header - Greeting */}
       <div className="lg:hidden mb-6 md:mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
-            <Sparkles className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-4 mb-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-white">
               {getGreeting()}, <span className="gradient-text">{user?.displayName?.split(' ')[0] || t('user')}</span>
             </h1>
+            <p className="text-slate-400 text-sm mt-0.5">{t('todayOverview')}</p>
           </div>
         </div>
-        <p className="text-slate-400 text-sm">{t('todayOverview')}</p>
       </div>
 
       {/* 4-Column Stats Grid */}
