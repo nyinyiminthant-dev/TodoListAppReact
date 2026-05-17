@@ -168,7 +168,7 @@ const handleEnableNotifications = async () => {
                 </div>
 
                 {/* Nav */}
-                <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" style={{ position: 'relative', zIndex: 10 }}>
                     {navItems.map(item => (
                         <NavLink
                             key={item.path}
@@ -235,7 +235,7 @@ const handleEnableNotifications = async () => {
                                 </button>
                                 
                                 {appearanceOpen && (
-                                    <div className="ml-6 mt-1 space-y-2">
+                                    <div className="ml-6 mt-1 space-y-2" style={{ position: 'relative', zIndex: 1 }}>
                                         <div className="flex gap-1.5">
                                             <button
                                                 onClick={() => setMode('dark')}
@@ -286,7 +286,7 @@ const handleEnableNotifications = async () => {
                                 </button>
 
                                 {languageOpen && (
-                                    <div className="ml-6 mt-1">
+                                    <div className="ml-6 mt-1" style={{ position: 'relative', zIndex: 1 }}>
                                         <div className="flex gap-1.5">
                                             <button
                                                 onClick={() => setLanguage('en')}
