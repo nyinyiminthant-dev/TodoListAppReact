@@ -2,29 +2,81 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { ChevronDown, LogOut, Sparkles, Sun, Moon } from 'lucide-react';
+import { LogOut, Sparkles, Sun, Moon, Bell, Download, Upload } from 'lucide-react';
+import { useFirestore } from '../contexts/FirestoreContext';
 
 export default function Header() {
     const { user, signOut } = useAuth();
-    const { language, setLanguage, t } = useLanguage();
+    const { t } = useLanguage();
     const { mode, colorTheme, setMode, setColorTheme } = useTheme();
+    const { exportData, importData } = useFirestore();
     const [profileOpen, setProfileOpen] = useState(false);
-    const [langOpen, setLangOpen] = useState(false);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
-    const langRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
                 setProfileOpen(false);
             }
-            if (langRef.current && !langRef.current.contains(e.target as Node)) {
-                setLangOpen(false);
-            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        const checkNotificationPermission = async () => {
+            if ('Notification' in window) {
+                setNotificationsEnabled(Notification.permission === 'granted');
+            }
+        };
+        checkNotificationPermission();
+    }, []);
+
+    const handleEnableNotifications = async () => {
+        try {
+            if (!('Notification' in window)) {
+                alert('Notifications not supported in this browser');
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                setNotificationsEnabled(true);
+            } else {
+                alert('Notification permission denied');
+            }
+        } catch (error) {
+            console.error('Failed:', error);
+        }
+    };
+
+    const handleExport = () => {
+        const json = exportData();
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `todolist-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target?.result as string);
+                importData(data);
+            } catch {
+                alert('Invalid file format');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
 
     const handleSignOut = () => {
         signOut();
@@ -39,65 +91,47 @@ export default function Header() {
         { id: 'sunset' as const, label: 'Sunset', color: '#f97316' },
     ];
 
-    return (
-        <header className="hidden lg:flex items-center justify-end gap-4 px-4 py-3 rounded-xl mb-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            {/* Language Toggle */}
-            <div className="relative" ref={langRef}>
-                <button
-                    onClick={() => setLangOpen(!langOpen)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all"
-                    style={{ background: 'var(--primary)', color: '#fff' }}
-                >
-                    <span>{language === 'en' ? 'EN' : 'MY'}</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${langOpen ? 'rotate-180' : ''}`} />
-                </button>
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return t('goodMorning');
+        if (hour < 18) return t('goodAfternoon');
+        return t('goodEvening');
+    };
 
-                {langOpen && (
-                    <div className="absolute right-0 top-full mt-2 py-2 rounded-xl shadow-lg border z-50"
-                        style={{ background: 'var(--surface)', borderColor: 'var(--border)', minWidth: '200px' }}>
-                        <div className="px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
-                            <p className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>{t('language')}</p>
-                        </div>
-                        <div className="p-2 space-y-1">
-                            <button
-                                onClick={() => { setLanguage('en'); setLangOpen(false); }}
-                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all"
-                                style={language === 'en' ? { background: 'var(--primary)', color: '#fff' } : { color: 'var(--text-1)' }}
-                            >
-                                🇬🇧 English
-                            </button>
-                            <button
-                                onClick={() => { setLanguage('my'); setLangOpen(false); }}
-                                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all"
-                                style={language === 'my' ? { background: 'var(--primary)', color: '#fff' } : { color: 'var(--text-1)' }}
-                            >
-                                🇲🇲 မြန်မာ
-                            </button>
-                        </div>
-                    </div>
-                )}
+    return (
+        <header className="hidden lg:flex items-center justify-between gap-4 px-4 py-3 rounded-xl mb-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            {/* Left Side - Greeting */}
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 shrink-0">
+                    <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                    <h1 className="text-lg font-bold text-white">
+                        {getGreeting()}, <span style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{user?.displayName?.split(' ')[0] || t('user')}</span>
+                    </h1>
+                    <p className="text-xs text-slate-400">{t('todayOverview')}</p>
+                </div>
             </div>
 
-            {/* Profile Dropdown */}
-            <div className="relative" ref={profileRef}>
-                <button
-                    onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5 transition-all"
-                >
-                    {user?.photoURL ? (
-                        <img src={user.photoURL} alt="avatar" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
-                    ) : (
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                            style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
-                            {user?.displayName?.[0] ?? 'U'}
-                        </div>
-                    )}
-                    <span className="text-sm font-medium" style={{ color: 'var(--text-1)' }}>
-                        {user?.displayName ?? 'User'}
-                    </span>
-                </button>
+            {/* Right Side - Profile + Icons */}
+            <div className="flex items-center gap-3">
+                {/* Profile Avatar First */}
+                <div className="relative" ref={profileRef}>
+                    <button
+                        onClick={() => setProfileOpen(!profileOpen)}
+                        className="flex items-center p-1 rounded-lg hover:bg-white/5 transition-all"
+                    >
+                        {user?.photoURL ? (
+                            <img src={user.photoURL} alt="avatar" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
+                        ) : (
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
+                                {user?.displayName?.[0] ?? 'U'}
+                            </div>
+                        )}
+                    </button>
 
-                {profileOpen && (
+                    {profileOpen && (
                     <div className="absolute right-0 top-full mt-2 py-3 rounded-xl shadow-lg border z-50"
                         style={{ background: 'var(--surface)', borderColor: 'var(--border)', minWidth: '280px' }}>
                         {/* Profile Info */}
@@ -168,6 +202,39 @@ export default function Header() {
                     </div>
                 )}
             </div>
+
+                {/* Install App Button */}
+                <button
+                    onClick={handleEnableNotifications}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
+                    style={{ background: 'transparent', border: '1px solid var(--border)' }}
+                    title="Install App"
+                >
+                    <Sparkles className="w-4 h-4" style={{ color: 'var(--text-2)' }} />
+                </button>
+
+                {/* Notifications Button */}
+                <button
+                    onClick={handleEnableNotifications}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg transition-all"
+                    style={{ 
+                        background: notificationsEnabled ? 'rgba(16,185,129,0.1)' : 'transparent',
+                        border: `1px solid ${notificationsEnabled ? 'rgba(16,185,129,0.3)' : 'var(--border)'}`
+                    }}
+                    title={notificationsEnabled ? 'Notifications On' : 'Enable Notifications'}
+                >
+                    <Bell className="w-4 h-4" style={{ color: notificationsEnabled ? '#10b981' : 'var(--text-2)' }} />
+                </button>
+            </div>
+
+            {/* Hidden file input for import */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={handleImport}
+            />
         </header>
     );
 }

@@ -227,7 +227,7 @@ const handleEnableNotifications = async () => {
                                 {/* Appearance Sub-item */}
                                 <button
                                     onClick={() => setAppearanceOpen(!appearanceOpen)}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
+                                    className="w-full flex items-center gap-3 pl-6 py-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all text-sm"
                                 >
                                     <Palette className="w-4 h-4" />
                                     <span className="flex-1 text-left">{t('appearance')}</span>
@@ -235,7 +235,7 @@ const handleEnableNotifications = async () => {
                                 </button>
                                 
                                 {appearanceOpen && (
-                                    <div className="ml-4 mt-1 space-y-2">
+                                    <div className="ml-6 mt-1 space-y-2">
                                         <div className="flex gap-1.5">
                                             <button
                                                 onClick={() => setMode('dark')}
@@ -278,7 +278,7 @@ const handleEnableNotifications = async () => {
                                 {/* Language Sub-item */}
                                 <button
                                     onClick={() => setLanguageOpen(!languageOpen)}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
+                                    className="w-full flex items-center gap-3 pl-6 py-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all text-sm"
                                 >
                                     <Globe className="w-4 h-4" />
                                     <span className="flex-1 text-left">{t('language')}</span>
@@ -286,7 +286,7 @@ const handleEnableNotifications = async () => {
                                 </button>
 
                                 {languageOpen && (
-                                    <div className="ml-4 mt-1">
+                                    <div className="ml-6 mt-1">
                                         <div className="flex gap-1.5">
                                             <button
                                                 onClick={() => setLanguage('en')}
@@ -314,38 +314,15 @@ const handleEnableNotifications = async () => {
 
                                 <button
                                     onClick={handleExport}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
+                                    className="w-full flex items-center gap-3 pl-6 py-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all text-sm"
                                 >
                                     <Download className="w-4 h-4" /> {t('exportData')}
                                 </button>
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
+                                    className="w-full flex items-center gap-3 pl-6 py-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all text-sm"
                                 >
                                     <Upload className="w-4 h-4" /> {t('importData')}
-                                </button>
-                                <button
-                                    onClick={handleClear}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all text-sm"
-                                >
-                                    <Trash2 className="w-4 h-4" /> {t('clearAllData')}
-                                </button>
-                                <button
-                                    onClick={handleEnableNotifications}
-                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 transition-all text-sm"
-                                >
-                                    <Sparkles className="w-4 h-4" /> Install App
-                                </button>
-                                <button
-                                    onClick={handleEnableNotifications}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
-                                        notificationsEnabled 
-                                            ? 'bg-emerald-500/20 text-emerald-300' 
-                                            : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
-                                    }`}
-                                >
-                                    <Bell className="w-4 h-4" /> 
-                                    {notificationsEnabled ? 'Notifications On' : 'Enable Notifications'}
                                 </button>
                                 <input
                                     ref={fileInputRef}
@@ -357,6 +334,40 @@ const handleEnableNotifications = async () => {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Utility Links - Pinned to bottom */}
+                <div className="px-3 py-3 border-t border-white/10 mt-auto">
+                    <button
+                        onClick={handleEnableNotifications}
+                        className="w-full flex items-center gap-2 py-2 rounded-xl text-sm text-slate-500 hover:text-white hover:bg-white/5 transition-all"
+                    >
+                        {notificationsEnabled ? (
+                            <>
+                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <span>Notifications On</span>
+                            </>
+                        ) : (
+                            <>
+                                <Bell className="w-4 h-4" />
+                                <span>Enable Notifications</span>
+                            </>
+                        )}
+                    </button>
+                    <button
+                        onClick={handleEnableNotifications}
+                        className="w-full flex items-center gap-2 py-2 rounded-xl text-sm text-slate-500 hover:text-white hover:bg-white/5 transition-all"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Install App</span>
+                    </button>
+                    <button
+                        onClick={handleClear}
+                        className="w-full flex items-center gap-2 py-2 rounded-xl text-sm text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        <span>{t('clearAllData')}</span>
+                    </button>
                 </div>
 
                 {/* User card + Sign out - Mobile only */}
